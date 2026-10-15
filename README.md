@@ -1,38 +1,33 @@
 # Okuma Ağacı — Sakura 🌸
 
-21 günde kitap okuma alışkanlığı edinmek için tasarlanmış, iPhone ana ekranına kurulabilen çevrimdışı PWA. Her gün ağaç gelişir; 11. günden itibaren kiraz çiçekleri açar.
+iPhone ana ekranına kurulabilen, internet bağlantısı olmadan çalışabilen 21 günlük okuma alışkanlığı PWA'sı. Tamamlanan her gün kiraz ağacı gelişir ve çiçeklenir.
 
-## Canlı uygulama
+**Uygulama:** https://hacitugrul4242-cpu.github.io/okuma-agaci/
 
-https://hacitugrul4242-cpu.github.io/okuma-agaci/
+## Yerel takvim günü kuralları
 
-iPhone Safari → Paylaş → Ana Ekrana Ekle. Güncellemeden sonra uygulamayı tamamen kapatıp tekrar aç.
+- İlk kullanımda başlangıç günü seçilir: **bugün veya ilerideki bir tarih**. Geçmiş günler seçilip sonradan işaretlenemez.
+- Gün hesabı **telefonun geçerli yerel tarihi ve saat dilimiyle** yapılır. Günler **00.00–23.59:59** aralığıdır; 24 saat bekleme zorunluluğu yoktur.
+- Örnek: 15 Ekim günü 23.59'da görevi tamamlayan kişi, 16 Ekim günü saat 00.00'dan itibaren sonraki görevi işaretleyebilir.
+- Gelecek günler ve geçmiş günler işaretlenemez; yalnızca bugünkü görev tamamlanabilir veya aynı gün geri alınabilir.
+- Bir takvim günü tamamlanmadan sona ererse saat 00.00'dan sonra seri otomatik sıfırlanır; **yeni tohum, 1. gün**. Tüm 21 gün tamamlanırsa ağaç kalıcıdır.
+- 23/25 saatlik yaz-kış saati geçişlerinde de **yerel takvim** kullanılır.
+- Önceki PWA sürümlerinin kayıtları korunur, geçmişteki 24 saat pencereleri geriye dönük cezalandırılmaz. Zamanlama bu sürümden itibaren takvim günlerine göre işler.
 
-## 24 saatlik seri kuralları
+Bu kurallar çevrimdışı olarak cihaz üzerinde çalışır; kullanıcı saat dilimini, sistem saatini veya yerel depolamayı kasıtlı değiştirirse sunucu düzeyinde güvenlik garantisi yoktur.
 
-- Başlangıç anı, birinci 24 saatlik günün başlangıcıdır.
-- Her 24 saatlik dilimde **yalnızca o gün** işaretlenebilir. Gelecek günler kilitlidir.
-- Süresi biten herhangi bir gün eksikse seri **otomatik sıfırlanır**; yeni bir tohumla 1. gün başlar.
-- 21/21 tamamlanırsa ağaç korunur, otomatik sıfırlanmaz.
-- Örnek: Pazartesi 17.30'da başladıysan ikinci gün salı 17.30'da açılır; takvim gece yarısına bağlı değildir.
-- Eski sürümdeki kayıtlar, geçmişte saat bilgisi bulunmadığından geriye dönük cezalandırılmaz; mevcut toplam korunur ve yeni kurallar güncellemeden itibaren uygulanır.
+## iPhone kurulumu
 
-Bu zaman kontrolü çevrimdışı cihaz üzerinde çalışır; telefon saati veya yerel depolama kasıtlı değiştirilirse sunucu düzeyinde garanti verilemez.
+1. Yukarıdaki bağlantıyı Safari'de aç.
+2. Paylaş → Ana Ekrana Ekle → (varsa) Web Uygulaması Olarak Aç → Ekle.
+3. Güncellemeden sonra siteyi çevrimiçi bir kez açıp tamamen kapat; yeniden başlat ve çevrimdışı test et.
+4. Kayıtlarını kaybetmemek için **Yedeği indir** seçeneğini kullan. JSON yedeğini herkese açık GitHub'a yükleme.
 
-## Gizlilik ve veri
+## Dosyalar
 
-- Okuma verileri sadece cihazda yerel olarak saklanır; GitHub'a gönderilmez.
-- Yedekleme/geri yükleme v2 (tamamlanma saatleriyle) desteklenir. v1 yedekleri de aktarılır.
-- JSON yedeklerini herkese açık GitHub'a yükleme.
-- Safari ile Ana Ekran uygulaması farklı depolama alanları kullanabilir.
-- Çevrimdışı kullanım ilk çevrimiçi açılıştan sonra önbelleğe alınır.
+- `index.html`: tüm HTML/CSS/Canvas çizimi, tarih seçimi, serinin takibi ve yedekleme
+- `manifest.webmanifest`: PWA kurulumu
+- `service-worker.js`: çevrimdışı önbellek
+- `icons/`: iPhone ve diğer cihazlar için simgeler
 
-## Proje dosyaları
-
-- `index.html`: arayüz, Canvas sakura, 21 günlük sistem ve zamanlama.
-- `manifest.webmanifest`: PWA kurulumu.
-- `service-worker.js`: sürümlü çevrimdışı önbellek.
-- `icons/`: uygulama simgeleri.
-- `.nojekyll`: GitHub Pages.
-
-GitHub Pages ayarları: Settings → Pages → Deploy from a branch → main → /(root).
+GitHub Pages: **Settings → Pages → Deploy from a branch → main → /(root)**.
