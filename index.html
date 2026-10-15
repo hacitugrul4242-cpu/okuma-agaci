@@ -1,0 +1,961 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f7f2">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="apple-mobile-web-app-title" content="Okuma Ağacı">
+  <meta name="description" content="21 günde kitap okuma alışkanlığı kazanırken ağacını büyüt.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+  <meta name="application-name" content="Okuma Ağacı">
+  <meta name="color-scheme" content="light">
+  <title>Okuma Ağacı — 21 Günlük Okuma Alışkanlığı</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #f6f7f2;
+      --paper: #ffffff;
+      --ink: #203c32;
+      --muted: #718078;
+      --forest: #245b43;
+      --forest-dark: #174531;
+      --sage: #eaf0e7;
+      --border: #e7ece5;
+      --radius: 24px;
+      --shadow: 0 12px 38px rgba(37, 69, 46, .055);
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+    body {
+      margin: 0; min-height: 100vh; min-height: 100dvh;
+      background: var(--page); color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+      font-size: 15px; line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, summary, input { -webkit-tap-highlight-color: transparent; }
+    button { -webkit-appearance: none; appearance: none; }
+    button, input { font-family: inherit; }
+    body { overscroll-behavior-y: none; }
+    button { font: inherit; cursor: pointer; touch-action: manipulation; }
+    button:focus-visible, summary:focus-visible { outline: 3px solid #96b797; outline-offset: 3px; }
+    [hidden] { display: none !important; }
+    .shell { width: min(100% - 32px, 480px); margin: 0 auto;
+      padding-top: calc(env(safe-area-inset-top, 0px) + 22px);
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 34px);
+      padding-left: max(0px, env(safe-area-inset-left, 0px) - 4px);
+      padding-right: max(0px, env(safe-area-inset-right, 0px) - 4px);
+    }
+    body.has-quick-dock .shell { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 107px); }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; margin-bottom: 22px; }
+    .eyebrow { display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 800; letter-spacing: .17em; color: #6e9176; }
+    .eyebrow svg { flex: none; }
+    h1 { margin: 8px 0 1px; font-size: clamp(29px, 8vw, 36px); line-height: 1.11; letter-spacing: -.052em; font-weight: 780; }
+    .subtitle { font-size: 13px; color: var(--muted); margin: 8px 0 0; }
+    .top-pill { margin-top: 8px; white-space: nowrap; padding: 8px 12px; border: 1px solid #dfe9db; border-radius: 30px; background: #ecf2e9; color: #467052; font-size: 11px; font-weight: 800; letter-spacing: .03em; }
+    .stage-card { overflow:hidden; border-radius:28px; background:#e7eddf; border:1px solid rgba(116,145,103,.2); box-shadow:0 20px 54px rgba(70,91,59,.105), 0 3px 10px rgba(34,80,48,.04); }
+    .canvas-holder { height: clamp(310px, 49svh, 435px); position: relative; isolation: isolate; }
+    @supports not (height: 1svh) { .canvas-holder { height: clamp(310px, 49vh, 435px); } }
+    #treeCanvas { display: block; width: 100%; height: 100%; }
+    .stage-tags { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; position: absolute; inset: 17px 17px auto; pointer-events: none; }
+    .glass-tag { display: flex; align-items: center; gap: 7px; background: rgba(255, 255, 249, .74); border: 1px solid rgba(255,255,255,.7); border-radius: 30px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 8px 11px; color: #355847; font-size: 11px; font-weight: 700; box-shadow: 0 3px 16px rgba(43,84,57,.045); }
+    .glass-tag strong { color: #1a4f38; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #66946d; flex: none; }
+    .stage-caption { min-height: 49px; padding: 13px 19px; background: #fff; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .stage-caption p { margin: 0; color: #6c7d70; font-size: 12px; }
+    .stage-caption strong { color: #466f4e; font-size: 12px; font-weight: 750; white-space: nowrap; }
+    .demo-bar { display:flex; flex-direction:column; align-items:center; gap:6px; padding:15px 5px 2px; }
+    .scrub-row { width:100%; display:flex; align-items:center; gap:9px; padding:9px 12px 3px; font-size:14px; }
+    .scrub-row input { flex:1; min-width:0; accent-color:#356f49; height:44px; cursor:pointer;
+      background: transparent; -webkit-appearance: none; appearance: none; touch-action:auto; }
+    .scrub-row input::-webkit-slider-runnable-track { height:7px; border-radius:8px; background:#cfdfcc; }
+    .scrub-row input::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:27px; height:27px;
+      margin-top:-10px; border:4px solid #fff; border-radius:50%; background:#2d6948;
+      box-shadow:0 1px 9px #31593e55; }
+    .scrub-row span:last-child { min-width:42px; font-weight:750; font-size:11px; color:#476d51; text-align:right; }
+    .preview-button { min-height:52px; display:inline-flex; align-items:center; gap:9px; padding:10px 18px; border:1px solid #d2e1d0; background:#eaf2e6; color:#295e40; border-radius:28px; font-weight:760; font-size:13px; box-shadow:0 3px 12px rgba(32,73,45,.03); }
+    .preview-button:hover { background:#dfecda; }
+    .preview-button:active { transform:scale(.985); }
+    .preview-note { font-size:11px; color:#87988a; text-align:center; }
+    .stage-caption { background:linear-gradient(90deg,#fff,#fbfdf7); }
+    .glass-tag { background:rgba(255,255,247,.78); }
+    .top-pill { background:linear-gradient(130deg,#ecf2e6,#f6efd9); }
+    .panel { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .welcome { margin-top: 16px; padding: 22px 20px 20px; }
+    .welcome h2 { font-size: 22px; letter-spacing: -.035em; line-height: 1.2; margin: 0 0 10px; }
+    .welcome p { font-size: 13px; line-height: 1.65; color: #76837b; margin: 0 0 20px; }
+    .tiny-label { font-size: 10px; letter-spacing: .15em; font-weight: 800; color: #87948b; }
+    .today-panel { margin-top: 16px; padding: 20px; }
+    .target-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .day-tag { padding: 7px 11px; background: #eff4eb; border-radius: 24px; font-size: 11px; font-weight: 800; color: #47724f; white-space: nowrap; }
+    .target-main { display: flex; align-items: center; gap: 13px; margin: 15px 0 17px; }
+    .target-icon { width: 54px; height: 54px; flex: none; border-radius: 17px; background: #f0f4ec; display: grid; place-items: center; color: #557857; }
+    .target-number { font-size: 42px; font-weight: 760; letter-spacing: -.065em; line-height: 1; color: #254d37; font-variant-numeric: tabular-nums; }
+    .target-number span { font-size: 20px; font-weight: 700; letter-spacing: -.02em; margin-left: 3px; }
+    .target-desc { font-size: 12px; margin-top: 5px; color: #8a968c; }
+    .action {
+      display: inline-flex; justify-content: center; align-items: center; gap: 10px;
+      width: 100%; min-height: 58px; border: 0; border-radius: 16px;
+      color: #fff; background: var(--forest); padding: 13px 16px;
+      font-weight: 760; font-size: 15px; letter-spacing: -.018em;
+      box-shadow: 0 7px 19px rgba(35, 85, 56, .14);
+      transition: background .2s, transform .18s, box-shadow .18s;
+    }
+    .action:active { transform: scale(.986); }
+    .action:hover { background: #1a4b37; }
+    .action.undo { color: #42644d; background: #edf3e9; box-shadow: none; }
+    .action.undo:hover { background: #e3eddd; }
+    .microcopy { min-height: 18px; text-align: center; font-size: 11px; color: #91a095; margin: 10px 0 0; }
+    .progress-panel { margin-top: 18px; padding: 20px 20px 18px; }
+    .section-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+    .section-header h2 { font-size: 18px; line-height: 1.25; letter-spacing: -.035em; margin: 0; }
+    .section-header span { font-size: 12px; font-weight: 750; color: #62816c; white-space: nowrap; }
+    .progress-track { width: 100%; height: 8px; background: #eef2eb; overflow: hidden; border-radius: 30px; margin-top: 16px; }
+    .progress-fill { height: 100%; width: 0%; border-radius: inherit; background: linear-gradient(90deg, #83ad73, #3a8255); transition: width 900ms cubic-bezier(.18,.78,.25,1); }
+    .section-subtitle { font-size: 12px; color: #89988d; margin: 10px 0 17px; }
+    .day-list { max-height: 303px; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; scrollbar-color: #dce6d9 transparent; scrollbar-width: thin; }
+    .day-row { display: flex; align-items: center; gap: 12px; padding: 12px 9px; border-bottom: 1px solid #f0f2ef; border-radius: 10px; min-height: 60px; }
+    .day-row:last-child { border-bottom: 0; }
+    .day-row.current { background: #eff5eb; border-bottom-color: transparent; }
+    .day-row.done { background: #fbfcfa; }
+    .day-circle { width: 34px; height: 34px; border: 1px solid #e9eee7; border-radius: 50%; flex: none; display: grid; place-items: center; color: #83948a; font-size: 11px; font-weight: 760; background: #f8faf6; }
+    .day-row.done .day-circle { color: white; background: #5b976c; border-color: #5b976c; }
+    .day-row.current .day-circle { color: #357346; background: white; border-color: #d6e6d3; }
+    .day-row.done.current .day-circle { background: #5b976c; color: white; }
+    .day-name { display: block; font-size: 12px; font-weight: 750; line-height: 1.32; }
+    .day-target { display: block; color: #97a299; font-size: 11px; margin-top: 4px; }
+    .day-state { margin-left: auto; font-size: 11px; color: #9aa79d; white-space: nowrap; }
+    .day-row.done .day-state { color: #49865d; font-weight: 700; }
+    .day-row.current .day-state { color: #447957; font-weight: 750; }
+    .ended { margin-top: 17px; padding: 18px 20px; background: #eaf2e6; border: 1px solid #d5e3d3; border-radius: 20px; }
+    .ended h2 { margin: 0 0 7px; font-size: 17px; }
+    .ended p { font-size: 12px; color: #607d65; margin: 0; }
+    .help { margin-top: 17px; padding: 0 18px; }
+    .help summary { list-style: none; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #4c7255; padding: 16px 2px; cursor: pointer; font-weight: 730; }
+    .help summary::-webkit-details-marker { display: none; }
+    .help summary svg { transition: transform .25s; }
+    .help[open] summary svg { transform: rotate(180deg); }
+    .help p { font-size: 12px; color: #839188; margin: 0 2px 18px; line-height: 1.7; }
+    .footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 23px 6px 0; }
+    .footer span { color: #99a49a; font-size: 11px; }
+    .reset { border: 0; min-height: 44px; color: #74877a; padding: 9px 2px; background: transparent; text-decoration: underline; text-decoration-color: #c0cdc0; text-underline-offset: 3px; font-size: 12px; }
+    .reset:hover { color: #9a4b3b; }
+    .dialog-scrim { position: fixed; inset: 0; z-index: 40; display: flex; justify-content: center; align-items: flex-end; background: rgba(13, 32, 23, .42); padding: 17px 17px calc(env(safe-area-inset-bottom) + 17px); animation: appear .2s ease-out; }
+    .dialog-card { width: min(100%, 460px); background: white; border-radius: 25px; padding: 26px 22px 22px; box-shadow: 0 24px 90px rgba(14, 42, 26, .19); animation: rise .24s ease-out; }
+    .dialog-card h2 { margin: 0 0 9px; font-size: 20px; letter-spacing: -.03em; }
+    .dialog-card p { color: #758379; font-size: 13px; line-height: 1.6; margin: 0 0 20px; }
+    .dialog-buttons { display: flex; gap: 9px; }
+    .dialog-buttons button { flex: 1; min-height: 50px; border: 0; border-radius: 14px; font-weight: 750; }
+    .cancel { background: #f1f4ef; color: #41644a; }
+    .danger { background: #a84f42; color: white; }
+    .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 105px); transform: translateX(-50%); z-index: 50; width: min(90vw, 390px); background: #284a36; color: #fff; font-size: 13px; border-radius: 14px; box-shadow: 0 10px 30px #25463522; padding: 12px 18px; text-align: center; }
+    .quick-dock { position:fixed; z-index:29; bottom:0; inset-inline:0;
+      padding:10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+      background:rgba(247,249,242,.93); -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px);
+      border-top:1px solid #e1e9df; box-shadow:0 -6px 26px #234b3015; }
+    .quick-dock-inner { margin:0 auto; max-width:480px; display:flex; align-items:center; gap:13px; }
+    .quick-dock-copy { min-width:74px; max-width:95px; display:flex; flex-direction:column; line-height:1.3; }
+    .quick-dock-copy strong {font-size:12px; color:#234b35;} .quick-dock-copy span {font-size:11px; color:#839587;}
+    .quick-dock .action { min-height:52px; padding:10px 11px; flex:1; font-size:13px; border-radius:14px; box-shadow:none; }
+    .iphone-note { margin-top:15px; padding:15px 17px; font-size:12px; line-height:1.55; background:#fff9ed;
+      color:#78633a; border:1px solid #eee0bc; border-radius:17px; }
+    @keyframes appear { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes rise { from { transform: translateY(20px); opacity: .7; } to { transform: translateY(0); opacity: 1; } }
+    @media (min-width: 680px) { .shell { padding-top: 45px; } .canvas-holder { height: 435px; } .quick-dock { display:none !important; } }
+    @media (max-height: 680px) and (orientation: portrait) { .canvas-holder {height: clamp(285px, 46svh, 345px);} .header {margin-bottom:16px;} }
+    @media (orientation: landscape) and (max-height: 500px) { .shell {padding-top: calc(env(safe-area-inset-top, 0px) + 14px);} .canvas-holder {height: 295px;} .header {margin-bottom:13px;} }
+    @media (max-width: 374px) { .stage-tags {inset:12px 10px auto;} .glass-tag {padding:7px 9px; font-size:10px;} .quick-dock-copy {min-width:66px;} }
+    @media (max-width: 350px) { .shell { width: min(100% - 24px, 480px); } .header { gap: 5px; } h1 { font-size: 28px; } .top-pill { padding: 7px; } .stage-tags { inset: 12px 10px auto; } .glass-tag { font-size: 10px; padding: 7px 9px; } .progress-panel, .today-panel { padding: 17px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; scroll-behavior: auto !important; } }
+
+    /* iPhone PWA: offline status and device-local backups. */
+    .data-card {margin-top:17px; padding:20px;}
+    .data-card h2 {font-size:17px; margin:0 0 6px; letter-spacing:-.03em;}
+    .data-card p {margin:0; font-size:12px; line-height:1.55; color:#718276;}
+    .data-actions {display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:17px;}
+    .data-btn {font:inherit; min-height:50px; padding:10px 8px; background:#eaf2e7; color:#245b43; border:1px solid #d3e3d2; border-radius:14px; font-size:12px; font-weight:750;}
+    .data-btn:disabled {opacity:.43; cursor:not-allowed;}
+    .data-btn:active {transform:scale(.98);}
+    .pwa-line {display:flex; align-items:center; gap:7px; color:#748475; font-size:11px; margin-top:15px;}
+    .pwa-indicator {display:inline-block; width:7px; height:7px; border-radius:50%; background:#bfac76; flex:none;}
+    .pwa-indicator.ready {background:#64a579;}
+    .pwa-indicator.offline {background:#d69f65;}
+    @media (max-width:350px) {.data-actions {grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="header">
+      <div>
+        <div class="eyebrow">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 4c-9 0-15 3-15 11a5 5 0 0 0 5 5c8 0 11-6 10-16Z"/><path d="M5 20c3-5 6-7 11-10"/></svg>
+          KÜÇÜK ADIMLAR, BÜYÜK ALIŞKANLIKLAR
+        </div>
+        <h1>Okuma Ağacı<span aria-hidden="true">.</span></h1>
+        <p class="subtitle">21 günde kitap okuma alışkanlığı</p>
+      </div>
+      <div class="top-pill">✦ 21 GÜN</div>
+    </header>
+
+    <section class="stage-card" aria-label="Büyüyen okuma ağacın">
+      <div class="canvas-holder" id="canvasHolder">
+        <canvas id="treeCanvas" role="img" aria-label="Toprağın içindeki başlangıç tohumu"></canvas>
+        <div class="stage-tags" aria-hidden="true">
+          <div class="glass-tag"><span class="status-dot"></span><span id="stageLabel">Bir tohumun hikâyesi</span></div>
+          <div class="glass-tag"><strong id="treeCount">0</strong> / 21</div>
+        </div>
+      </div>
+      <div class="stage-caption"><p id="captionText">Her büyük ağaç bir tohumla başlar.</p><strong id="captionBadge">Tohum</strong></div>
+    </section>
+    <div class="demo-bar" aria-live="polite">
+      <button type="button" class="preview-button" id="previewBtn" aria-pressed="false">
+        <span id="previewIcon" aria-hidden="true">▶</span><span id="previewLabel">21 Günlük Büyümeyi İzle</span>
+      </button>
+      <span class="preview-note" id="previewNote">Tohumdan canlı bir ağaca • Kayıtların değişmez</span>
+      <div class="scrub-row" id="scrubRow" hidden><span>🌰</span><input type="range" id="previewRange" min="0" max="21" value="0" step="1" aria-label="Önizleme gününü seç"><span>🌳</span><span id="scrubValue">0. gün</span></div>
+    </div>
+
+    <section class="panel welcome" id="welcomePanel" aria-labelledby="welcomeHeading">
+      <div class="tiny-label" style="margin-bottom: 10px;">YOLCULUĞUN BAŞLIYOR</div>
+      <h2 id="welcomeHeading">Bir sayfayla başla. 🌱</h2>
+      <p>İlk gün sadece <strong>1 dakika</strong> oku. Her tamamlanan gün, ağacında yeni bir dal ya da yaprağa dönüşsün.</p>
+      <button class="action" id="startBtn" type="button">
+        Yolculuğa Başla
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 14 0M13 6l6 6-6 6"/></svg>
+      </button>
+      <p class="microcopy">Başlangıç tarihi bugün olarak kaydedilir.</p>
+    </section>
+
+    <section class="panel today-panel" id="todayPanel" aria-labelledby="todayTitle" hidden>
+      <div class="target-header"><span class="tiny-label" id="todayTitle">BUGÜNÜN OKUMA HEDEFİ</span><span class="day-tag" id="dayTag">Gün 1 / 21</span></div>
+      <div class="target-main">
+        <div class="target-icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v5l3.5 2M12 3a9 9 0 1 0 9 9"/><path d="M12 1v4M17.5 3.5l2 2"/></svg>
+        </div>
+        <div>
+          <div class="target-number" id="targetNumber">1 <span>dk</span></div>
+          <div class="target-desc" id="targetDescription">Bugün kendine ayıracağın zaman</div>
+        </div>
+      </div>
+      <button class="action" id="completeBtn" type="button">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 10 17l9-10"/></svg>
+        <span id="completeLabel">Bugünü Tamamladım</span>
+      </button>
+      <p class="microcopy" id="actionHint">Hedefini bitirince işaretle; ağacın büyüsün.</p>
+    </section>
+
+    <section class="ended" id="endPanel" hidden aria-live="polite"><h2>21 günlük yolculuk sona erdi 🌳</h2><p id="endText">Tamamladığın her gün, ağacında iz bıraktı.</p></section>
+
+    <section class="panel progress-panel" aria-labelledby="progressHeading">
+      <div class="section-header"><h2 id="progressHeading">21 günlük yol haritan</h2><span id="progressCount">0 / 21 tamamlandı</span></div>
+      <div class="progress-track" role="progressbar" aria-label="Tamamlanan günler" aria-valuemin="0" aria-valuemax="21" aria-valuenow="0" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+      <p class="section-subtitle">Her günün hedefi küçük, etkisi kalıcı.</p>
+      <div class="day-list" id="dayList" role="list" aria-label="21 günün okuma hedefleri"></div>
+    </section>
+
+
+    <section class="panel data-card" aria-labelledby="dataTitle">
+      <h2 id="dataTitle">Okuma kayıtların güvende kalsın</h2>
+      <p>İlerlemen yalnızca bu cihazda saklanır. Telefon değiştirirken veya Safari verilerini temizlemeden önce yedek al.</p>
+      <div class="data-actions">
+        <button class="data-btn" id="exportBtn" type="button" disabled>↓ Yedeği indir</button>
+        <button class="data-btn" id="importBtn" type="button">↑ Yedeği geri yükle</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json,.json" hidden aria-label="Okuma Ağacı yedek dosyası">
+      <div class="pwa-line" role="status" aria-live="polite"><span class="pwa-indicator" id="pwaDot"></span><span id="pwaStatus">Çevrimdışı kullanım kontrol ediliyor…</span></div>
+    </section>
+
+    <p class="iphone-note" id="localFileNotice" hidden>📱 <strong>iPhone notu:</strong> Dosyalar uygulamasından doğrudan açılan HTML dosyasında ilerleme kaydı güvenilir olmayabilir. Kalıcı kullanım için dosyayı HTTPS adresine yükleyip Safari'den aç.</p>
+
+    <details class="panel help">
+      <summary>iPhone ana ekranına nasıl eklerim?
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <p><strong>1.</strong> GitHub Pages üzerinden yayımlanan HTTPS adresini iPhone'da Safari ile aç.<br>
+      <strong>2.</strong> Paylaş menüsündeki <strong>“Ana Ekrana Ekle”</strong> seçeneğine bas; varsa <strong>“Web Uygulaması Olarak Aç”</strong> seçeneğini aç.<br>
+      <strong>3.</strong> Uygulamayı çevrimiçi ilk kez açıp çevrimdışı hazır bildiriminin gelmesini bekle. Sonraki açılışlarda internetsiz de çalışır.<br>
+      <strong>Not:</strong> Safari ve ana ekran uygulamasının verileri farklı olabilir. Yedekleme/geri yükleme özelliğiyle verilerini taşı. Uygulamayı silmek veya cihaz verilerini temizlemek kayıtlarını kaybettirebilir.</p>
+    </details>
+
+    <footer class="footer"><span>Bir gün, bir sayfa, bir dal.</span><button type="button" id="resetBtn" class="reset" hidden>Yolculuğu sıfırla</button></footer>
+  </main>
+
+  <aside class="quick-dock" id="quickDock" aria-label="Bugünkü okuma için hızlı işlem" hidden>
+    <div class="quick-dock-inner"><div class="quick-dock-copy"><strong id="dockDay">1. Gün</strong><span id="dockTarget">1 dakika</span></div>
+      <button type="button" class="action" id="dockBtn"><span id="dockLabel">Bugünü Tamamladım</span></button>
+    </div>
+  </aside>
+
+  <div class="dialog-scrim" id="resetDialog" hidden>
+    <div class="dialog-card" role="dialog" aria-modal="true" aria-labelledby="dialogHeading" aria-describedby="dialogText">
+      <h2 id="dialogHeading">Baştan başlamak istiyor musun?</h2>
+      <p id="dialogText">Başlangıç tarihin ve tamamladığın günler silinecek. Önce yedek almanı öneririz. Yedek olmadan bu işlem geri alınamaz.</p>
+      <div class="dialog-buttons"><button type="button" class="cancel" id="cancelReset">Vazgeç</button><button type="button" class="danger" id="confirmReset">Evet, sıfırla</button></div>
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script>
+  (() => {
+    'use strict';
+    const KEY = 'okuma-agaci-v1';
+    const MAX_DAYS = 21;
+    const schedule = [1, 1, 2, 2, 5, 5, 10, 10, 15, 15, 20, 20, 30, 30, 45, 45, 60, 60, 60, 60, 60];
+    const $ = id => document.getElementById(id);
+    const canvas = $('treeCanvas');
+    let ctx = canvas.getContext('2d', { alpha: false });
+    const prefersReducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    let state = readState();
+    let shownStage = state ? state.completed.length : 0;
+    let transition = null;
+    let preview = null; // Görsel canlandırma: kayıtlı okuma ilerlemesine dokunmaz.
+    const PREVIEW_STEP_MS = 920;
+    let falling = [];
+    let lastFrame = 0;
+    let toastTimeout;
+    let lastLocalDate = localDate();
+    let lastFocus = null;
+    let todayVisible = true;
+    let canvasVisible = true;
+    const isSmallScreen = matchMedia('(max-width: 679px)');
+    $('localFileNotice').hidden = !['file:', 'content:'].includes(location.protocol);
+
+    function localDate(date = new Date()) {
+      return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+    }
+    function daySerial(ymd) {
+      const parts = ymd.split('-').map(Number);
+      return Date.UTC(parts[0], parts[1] - 1, parts[2]) / 86400000;
+    }
+    function currentDay() { return state ? Math.max(1, Math.floor(daySerial(localDate()) - daySerial(state.started)) + 1) : 0; }
+    function validDate(str) {
+      if (typeof str !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(str)) return false;
+      return localDate(new Date(Number(str.slice(0,4)), Number(str.slice(5,7))-1, Number(str.slice(8,10)))) === str;
+    }
+    function readState() {
+      try {
+        const o = JSON.parse(localStorage.getItem(KEY));
+        if (!o || !validDate(o.started) || !Array.isArray(o.completed)) return null;
+        const elapsed = Math.max(0, Math.floor(daySerial(localDate()) - daySerial(o.started)) + 1);
+        const completed = [...new Set(o.completed.filter(d => Number.isInteger(d) && d >= 1 && d <= MAX_DAYS && d <= elapsed))].sort((a,b) => a-b);
+        return { started: o.started, completed };
+      } catch { return null; }
+    }
+    function persist() {
+      try {
+        if (state) localStorage.setItem(KEY, JSON.stringify(state));
+        else localStorage.removeItem(KEY);
+      } catch { showToast('Bu ortamda kalıcı kayıt yapılamıyor. HTTPS üzerinden Safari kullan.'); }
+    }
+    function showToast(msg) {
+      const el = $('toast');
+      el.textContent = msg;
+      el.hidden = false;
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => { el.hidden = true; }, 4000);
+    }
+    function setCanvasLabel() {
+      const count = state ? state.completed.length : 0;
+      canvas.setAttribute('aria-label', count === 0 ? 'Topraktaki bir tohum; henüz tamamlanmış okuma günü yok.' : `${count} okuma günüyle büyüyen, dalları ve yaprakları olan bir ağaç.`);
+    }
+    function syncDock() {
+      const day = currentDay();
+      const show = Boolean(state && day >= 1 && day <= MAX_DAYS && !todayVisible && !preview && $('resetDialog').hidden && isSmallScreen.matches);
+      $('quickDock').hidden = !show;
+      document.body.classList.toggle('has-quick-dock', show);
+      if (state && day <= MAX_DAYS) {
+        $('dockDay').textContent = `${day}. Gün`;
+        $('dockTarget').textContent = `${schedule[day-1]} dakika`;
+        const done = state.completed.includes(day);
+        $('dockLabel').textContent = done ? 'Bugünü Geri Al' : 'Bugünü Tamamladım';
+        $('dockBtn').classList.toggle('undo', done);
+      }
+    }
+    function updateUI({ animate = false, scrollCurrent = false } = {}) {
+      const count = state ? state.completed.length : 0;
+      const day = currentDay();
+      $('welcomePanel').hidden = Boolean(state);
+      $('todayPanel').hidden = !state || day > MAX_DAYS;
+      $('endPanel').hidden = !state || day <= MAX_DAYS;
+      $('resetBtn').hidden = !state;
+      $('exportBtn').disabled = !state;
+      if (state && day <= MAX_DAYS) {
+        const done = state.completed.includes(day);
+        $('dayTag').textContent = `Gün ${day} / 21`;
+        $('targetNumber').innerHTML = `${schedule[day-1]} <span>dk</span>`;
+        $('targetDescription').textContent = done ? 'Bugün için hedefini tamamladın' : 'Bugün kendine ayıracağın zaman';
+        $('completeBtn').classList.toggle('undo', done);
+        $('completeLabel').textContent = done ? 'Bugünü Geri Al' : 'Bugünü Tamamladım';
+        $('actionHint').textContent = done ? 'Harika! İstersen bugünkü işaretlemeyi geri alabilirsin.' : 'Hedefini bitirince işaretle; ağacın büyüsün.';
+      }
+      if (state && day > MAX_DAYS) {
+        $('endText').textContent = `21 günün ${count} gününü tamamladın. Ağacın, verdiğin emeğin hatırası olarak burada kalıyor.`;
+      }
+      $('progressCount').textContent = `${count} / 21 tamamlandı`;
+      $('progressBar').setAttribute('aria-valuenow', count);
+      $('progressFill').style.width = `${count / 21 * 100}%`;
+      $('treeCount').textContent = count;
+      let word = 'Tohum';
+      if (count >= 1 && count <= 2) word = 'Filiz';
+      else if (count >= 3 && count <= 6) word = 'Fidan';
+      else if (count >= 7 && count <= 12) word = 'Genç ağaç';
+      else if (count >= 13 && count <= 20) word = 'Büyüyen ağaç';
+      else if (count === 21) word = 'Koca bir ağaç';
+      $('captionBadge').textContent = word;
+      $('stageLabel').textContent = count ? `${count}. büyüme halkası` : 'Bir tohumun hikâyesi';
+      $('captionText').textContent = count === 0 ? 'Her büyük ağaç bir tohumla başlar.' : count === 21 ? '21 güzel günün her biri bu ağaçta yaşıyor.' : 'Her okuma günü, ağacında yeni bir iz bırakır.';
+      setCanvasLabel();
+      renderDays(day);
+      syncDock();
+      if (scrollCurrent && state) {
+        const current = $('dayList').querySelector('.current');
+        if (current) $('dayList').scrollTop = Math.max(0, current.offsetTop - $('dayList').offsetTop - 65);
+      }
+      if (animate && !prefersReducedMotion.matches) {
+        const from = shownStage;
+        const to = count;
+        if (from !== to) transition = { from, to, start: performance.now(), duration: 2150 };
+      } else { transition = null; shownStage = count; }
+      draw(performance.now());
+    }
+    function renderDays(today) {
+      const list = $('dayList');
+      const fragment = document.createDocumentFragment();
+      for (let day = 1; day <= MAX_DAYS; day++) {
+        const done = Boolean(state && state.completed.includes(day));
+        const active = Boolean(state && today === day);
+        const row = document.createElement('div');
+        row.className = `day-row${done ? ' done' : ''}${active ? ' current' : ''}`;
+        row.setAttribute('role', 'listitem');
+        const status = done ? 'Tamamlandı' : active ? 'Bugün' : (state && today > day) ? 'Tamamlanmadı' : 'Sırada';
+        row.innerHTML = `<div class="day-circle" aria-hidden="true">${done ? '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4.5 4.5L19 7"/></svg>' : day}</div><div><span class="day-name">${day}. Gün</span><span class="day-target">${schedule[day-1]} dakika okuma</span></div><span class="day-state">${status}</span>`;
+        fragment.append(row);
+      }
+      const oldScroll = list.scrollTop;
+      list.replaceChildren(fragment);
+      list.scrollTop = oldScroll;
+    }
+    function previewLabels(count) {
+      const word = count===0 ? 'Tohum' : count<=2 ? 'Filiz' : count<=6 ? 'Fidan' : count<=12 ? 'Genç ağaç' : count<21 ? 'Büyüyen ağaç' : 'Koca bir ağaç';
+      $('treeCount').textContent = count;
+      $('previewRange').value = count; $('scrubValue').textContent = `${count}. gün`;
+      $('stageLabel').textContent = count===0 ? 'Önizleme • Başlangıç' : `Önizleme • ${count}. gün`;
+      $('captionBadge').textContent = word;
+      $('captionText').textContent = count===0 ? 'Toprağa bir tohum ekildi.' : count===21 ? '21 günün sonunda yetişkin ağaç!' : `${count}. gün • ${schedule[count-1]} dakika okuma`;
+      canvas.setAttribute('aria-label', `Önizleme: 21 günün ${count}. günündeki ağaç`);
+      if(count===21) {
+        $('previewLabel').textContent = 'Önizlemeyi Kapat';
+        $('previewIcon').textContent = '✕';
+        $('previewNote').textContent = '21 gün tamamlandı. Gerçek ilerlemen değişmedi.';
+      }
+    }
+    function stopPreview() {
+      if(!preview) return;
+      preview = null;
+      falling = [];
+      $('previewLabel').textContent = '21 Günlük Büyümeyi İzle';
+      $('previewIcon').textContent = '▶';
+      $('previewNote').textContent = 'Tohumdan canlı bir ağaca • Kayıtların değişmez';
+      $('scrubRow').hidden = true;
+      $('previewBtn').setAttribute('aria-pressed', 'false');
+      updateUI();
+      syncDock();
+    }
+    function togglePreview() {
+      if(preview) { stopPreview(); return; }
+      preview = { start: performance.now(), lastDay: -1, pausedAt: null, manual: prefersReducedMotion.matches ? 21 : null };
+      transition = null;
+      falling = [];
+      $('previewLabel').textContent = 'Önizlemeyi Durdur';
+      $('previewIcon').textContent = '■';
+      $('previewNote').textContent = 'Her günün ağacı farklı • Kaydın korunuyor';
+      $('scrubRow').hidden = false; $('previewRange').value = 0;
+      $('previewBtn').setAttribute('aria-pressed', 'true');
+      syncDock();
+      draw(performance.now());
+    }
+    function animateStage(count, completeDay) {
+      if (prefersReducedMotion.matches) { falling = []; return; }
+      if (completeDay) spawnFalling(count);
+    }
+    function start() {
+      if (state) return;
+      if (preview) stopPreview();
+      state = { started: localDate(), completed: [] };
+      persist();
+      updateUI({ scrollCurrent: true });
+      $('completeBtn').focus({ preventScroll: true });
+    }
+    function toggleToday() {
+      if (!state) return;
+      if (preview) stopPreview();
+      const d = currentDay();
+      if (d < 1 || d > MAX_DAYS) return;
+      const done = state.completed.includes(d);
+      if (done) state.completed = state.completed.filter(n => n !== d);
+      else state.completed.push(d);
+      state.completed.sort((a,b) => a-b);
+      persist();
+      animateStage(state.completed.length, !done);
+      if (!done) showToast(state.completed.length === 21 ? '21 gün! Bu ağacı sen büyüttün. ✨' : `${d}. gün tamam! Ağacın biraz daha canlandı. 🌿`);
+      updateUI({ animate: true });
+    }
+    function openReset() { if (preview) stopPreview(); lastFocus = document.activeElement; $('resetDialog').hidden = false; document.body.style.overflow = 'hidden'; syncDock(); $('cancelReset').focus(); }
+    function closeReset() { $('resetDialog').hidden = true; document.body.style.overflow = ''; syncDock(); if (lastFocus && lastFocus.isConnected) lastFocus.focus(); }
+    function reset() {
+      closeReset();
+      state = null;
+      falling = [];
+      persist();
+      updateUI({ animate: true });
+      window.scrollTo({ top: 0, behavior: prefersReducedMotion.matches ? 'instant' : 'smooth' });
+      $('startBtn').focus({ preventScroll: true });
+    }
+
+    // Export/import allows moving records between Safari and the home-screen web app.
+    // The JSON file contains no secrets and is never sent to a server.
+    function exportBackup() {
+      if (!state) { showToast('Önce okumaya başla.'); return; }
+      const data = {format:'okuma-agaci-backup', version:1, exportedAt:new Date().toISOString(), data:{started:state.started, completed:[...state.completed]}};
+      const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});
+      const u = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href=u; a.download=`okuma-agaci-yedek-${localDate()}.json`;
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(u),15000);
+      showToast('Yedek dosyası hazır. iPhone’da Dosyalar’a kaydedebilirsin.');
+    }
+    function validateBackup(raw) {
+      if(!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Dosya biçimi hatalı.');
+      let b;
+      if(raw.format === 'okuma-agaci-backup' && raw.version === 1) b=raw.data;
+      else if(!raw.format && raw.started && Array.isArray(raw.completed)) b=raw;
+      else throw new Error('Bu dosya Okuma Ağacı yedeği değil.');
+      if(!b || !validDate(b.started) || !Array.isArray(b.completed)) throw new Error('Yedekte geçersiz tarih veya gün verisi var.');
+      if(daySerial(b.started) > daySerial(localDate())) throw new Error('Yedek başlangıç tarihi gelecekte olamaz.');
+      const elapsed=Math.floor(daySerial(localDate())-daySerial(b.started))+1;
+      if(b.completed.some(d=>!Number.isInteger(d)||d<1||d>MAX_DAYS||d>elapsed)) throw new Error('Yedekteki günler geçersiz.');
+      return {started:b.started,completed:[...new Set(b.completed)].sort((a,b)=>a-b)};
+    }
+    async function importBackup(file) {
+      if(!file) return;
+      if(file.size>65536) {showToast('Yedek dosyası çok büyük.');return;}
+      try {
+        const content=await file.text();
+        const imported=validateBackup(JSON.parse(content));
+        if(state && !window.confirm('Mevcut okuma ilerlemenin üzerine yedekteki kayıtlar yazılacak. Devam edilsin mi?'))return;
+        if(preview)stopPreview();
+        state=imported;
+        falling=[]; transition=null; shownStage=imported.completed.length;
+        persist(); updateUI({scrollCurrent:true});
+        showToast('Okuma kayıtların geri yüklendi. 🌿');
+      }catch(e){showToast('Yedek yüklenemedi: '+(e instanceof SyntaxError?'Geçersiz JSON dosyası.':e.message));}
+    }
+    $('exportBtn').addEventListener('click',exportBackup);
+    $('importBtn').addEventListener('click',()=>$('importFile').click());
+    $('importFile').addEventListener('change',async e=>{
+      const selected=e.target.files && e.target.files[0];
+      await importBackup(selected);
+      e.target.value='';
+    });
+
+    // Register the service worker under a relative path to support GitHub Pages project sites.
+    function updateOfflineIndicator(label,kind='') {
+      $('pwaStatus').textContent=label;
+      $('pwaDot').className='pwa-indicator '+kind;
+    }
+    if('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost' || location.hostname==='127.0.0.1')) {
+      window.addEventListener('load',async()=>{
+        try {
+          const registration=await navigator.serviceWorker.register('./service-worker.js',{scope:'./'});
+          await navigator.serviceWorker.ready;
+          updateOfflineIndicator(navigator.onLine?'Çevrimdışı kullanım için dosyalar hazır':'İnternetsiz kullanım açık','ready');
+          registration.addEventListener('updatefound',()=>{
+            const w=registration.installing;
+            if(w)w.addEventListener('statechange',()=>{
+              if(w.state==='installed' && navigator.serviceWorker.controller) showToast('Yeni uygulama sürümü hazır. Yeniden açarak güncelleyebilirsin.');
+            });
+          });
+        } catch(err) {updateOfflineIndicator('Çevrimdışı kurulum başarısız. İnternet bağlantını kontrol et.','offline');}
+      });
+      window.addEventListener('offline',()=>updateOfflineIndicator('İnternetsiz kullanım açık','ready'));
+      window.addEventListener('online',()=>updateOfflineIndicator('Çevrimdışı kullanım için dosyalar hazır','ready'));
+    } else if(['file:','content:'].includes(location.protocol)) {
+      updateOfflineIndicator('PWA için HTTPS üzerinden aç.');
+    } else {updateOfflineIndicator('Bu tarayıcıda çevrimdışı destek kullanılamıyor.','offline');}
+
+    $('previewBtn').addEventListener('click', togglePreview);
+    $('previewRange').addEventListener('input', e => {
+      if(!preview) return; preview.manual=Number(e.target.value); preview.lastDay=preview.manual;
+      previewLabels(preview.manual); falling=[]; transition=null; draw(performance.now());
+      $('previewLabel').textContent = 'Önizlemeyi Kapat'; $('previewIcon').textContent = '✕';
+      $('previewNote').textContent = 'Günleri kaydırarak ağacının gelişimini incele.';
+    });
+    $('startBtn').addEventListener('click', start);
+    $('dockBtn').addEventListener('click', toggleToday);
+    $('completeBtn').addEventListener('click', toggleToday);
+    $('resetBtn').addEventListener('click', openReset);
+    $('cancelReset').addEventListener('click', closeReset);
+    $('confirmReset').addEventListener('click', reset);
+    $('resetDialog').addEventListener('click', e => { if (e.target === $('resetDialog')) closeReset(); });
+    document.addEventListener('keydown', e => {
+      if ($('resetDialog').hidden) return;
+      if (e.key === 'Escape') closeReset();
+      if (e.key === 'Tab') {
+        const a = $('cancelReset'), b = $('confirmReset');
+        if (e.shiftKey && document.activeElement === a) { e.preventDefault(); b.focus(); }
+        if (!e.shiftKey && document.activeElement === b) { e.preventDefault(); a.focus(); }
+      }
+    });
+    function checkDate() {
+      const now = localDate();
+      if (now !== lastLocalDate) { lastLocalDate = now; updateUI({ scrollCurrent: true }); }
+    }
+    window.addEventListener('pageshow', checkDate);
+    document.addEventListener('visibilitychange', () => {
+      const now=performance.now();
+      if(document.hidden && preview) preview.pausedAt=now;
+      if(!document.hidden) {
+        if(preview && preview.pausedAt!==null) {preview.start+=now-preview.pausedAt;preview.pausedAt=null;}
+        checkDate(); syncDock(); draw(now);
+      }
+    });
+    setInterval(checkDate, 60000);
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(entries => {
+        todayVisible = entries[0].isIntersecting && entries[0].intersectionRatio > .5;
+        syncDock();
+      }, {threshold:[0, .5, 1]}).observe($('completeBtn'));
+      new IntersectionObserver(entries => {canvasVisible = entries[0].isIntersecting;}, {rootMargin:'100px'}).observe($('canvasHolder'));
+    }
+    isSmallScreen.addEventListener ? isSmallScreen.addEventListener('change', syncDock) : isSmallScreen.addListener(syncDock);
+
+      // Deterministic botanical illustration. All 21 stages are generated from the
+    // same tree architecture; new twigs/leaves are revealed on their assigned days.
+    function random(seed) {
+      let t=seed>>>0;
+      return () => { t+=0x6D2B79F5; let x=t; x=Math.imul(x^(x>>>15),x|1);x^=x+Math.imul(x^(x>>>7),x|61);return ((x^(x>>>14))>>>0)/4294967296; };
+    }
+    const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+    const lerp=(a,b,t)=>a+(b-a)*t;
+    const ease=t=>{t=clamp(t);return t*t*(3-2*t);};
+    function ellipse(x,y,rx,ry,color,rot=0) {
+      ctx.save();ctx.translate(x,y);ctx.rotate(rot);ctx.beginPath();ctx.ellipse(0,0,Math.max(.02,rx),Math.max(.02,ry),0,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();ctx.restore();
+    }
+    function grad(x,y,xx,yy,stops) { const g=ctx.createLinearGradient(x,y,xx,yy);for(const [p,c] of stops)g.addColorStop(p,c);return g; }
+    function leaf(x,y,sz,angle,color,opacity=1,vein=false) {
+      ctx.save();ctx.globalAlpha*=clamp(opacity);ctx.translate(x,y);ctx.rotate(angle);
+      ctx.beginPath();ctx.moveTo(-sz*.62,0);
+      ctx.bezierCurveTo(-sz*.34,-sz*.44,sz*.11,-sz*.42,sz*.69,-sz*.03);
+      ctx.bezierCurveTo(sz*.23,sz*.42,-sz*.28,sz*.43,-sz*.62,0);ctx.closePath();
+      ctx.fillStyle=color;ctx.fill();
+      if(vein){ctx.beginPath();ctx.moveTo(-sz*.45,0);ctx.quadraticCurveTo(0,-sz*.03,sz*.53,-sz*.03);ctx.strokeStyle='rgba(227,245,181,.36)';ctx.lineWidth=.43;ctx.stroke();}
+      ctx.restore();
+    }
+    function backdrop(t,stage) {
+      ctx.fillStyle=grad(0,0,0,400,[[0,'#bedce0'],[.29,'#d9e9e2'],[.69,'#f2edce'],[1,'#e5d7ae']]);ctx.fillRect(0,0,420,400);
+      // Late afternoon sun, with translucent atmospheric scattering.
+      const sun=ctx.createRadialGradient(324,93,3,324,93,171);
+      sun.addColorStop(0,'rgba(255,254,234,.98)');sun.addColorStop(.13,'rgba(255,248,205,.64)');sun.addColorStop(.43,'rgba(255,240,189,.28)');sun.addColorStop(1,'rgba(255,239,189,0)');
+      ctx.fillStyle=sun;ctx.fillRect(145,0,275,279);
+      ellipse(329,94,22,22,'rgba(255,253,225,.76)');
+      // A delicate moving cloud bank; keep contrast low behind foliage.
+      for(const [x,y,w,a] of [[70,78,78,.15],[263,155,91,.10],[140,202,60,.07]]){
+        const dx=Math.sin(t*.000055+x)*5;
+        ellipse(x+dx,y,w,9,`rgba(255,255,255,${a})`);
+        ellipse(x+19+dx,y-5,w*.66,8,`rgba(255,255,255,${a*.75})`);
+      }
+      ctx.beginPath();ctx.moveTo(0,272);ctx.bezierCurveTo(56,241,91,255,155,268);ctx.bezierCurveTo(223,224,333,255,420,229);ctx.lineTo(420,369);ctx.lineTo(0,369);ctx.fillStyle='#c4d5bf';ctx.fill();
+      ctx.beginPath();ctx.moveTo(0,302);ctx.bezierCurveTo(82,269,116,284,191,290);ctx.bezierCurveTo(278,255,353,270,420,262);ctx.lineTo(420,387);ctx.lineTo(0,387);ctx.fillStyle='#aebfa4';ctx.fill();
+      ctx.beginPath();ctx.moveTo(0,347);ctx.bezierCurveTo(95,329,154,350,216,338);ctx.bezierCurveTo(292,323,360,348,420,336);ctx.lineTo(420,400);ctx.lineTo(0,400);ctx.fillStyle=grad(0,337,0,400,[[0,'#a4b780'],[.50,'#879f68'],[1,'#6d8553']]);ctx.fill();
+      // Dappled light in the foreground.
+      const rr=random(361201);
+      for(let i=0;i<185;i++){
+        let x=rr()*420,y=339+rr()*65;
+        ellipse(x,y,.6+rr()*3,.28+rr()*1.2,i%4===0?'rgba(246,230,171,.32)':'rgba(48,88,52,.17)',rr()*Math.PI);
+      }
+      ctx.save();ctx.globalAlpha=.2+clamp(stage/21)*.2;
+      ellipse(217,347,27+stage*2.9,4.5+stage*.25,'#394b34',-.10);ctx.restore();
+      for(let i=0;i<83;i++){
+        const r=random(1211+i*178), x=i*5.25+(r()-.5)*3,y=340+3*Math.sin(x/38)+4*Math.sin(x/86);
+        ctx.beginPath();ctx.moveTo(x,y+5);ctx.quadraticCurveTo(x+(r()-.5)*8,y-2,x+(r()-.5)*7,y-(3+r()*9));
+        ctx.strokeStyle=i%3?'rgba(56,102,56,.4)':'rgba(187,170,95,.51)';ctx.lineWidth=.6+r()*.5;ctx.stroke();
+      }
+      if(stage>9){ // Small meadow flowers as the habit takes root.
+        for(let i=0;i<12;i++){
+          const r=random(55591+i*71),born=10+i*.91;if(stage<born)continue;
+          const x=24+r()*367,y=348+r()*27,scale=clamp(stage-born);
+          ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+1,y-5*scale);ctx.strokeStyle='#5d8555';ctx.lineWidth=.8;ctx.stroke();
+          ellipse(x+1,y-5*scale,1.5*scale,1.5*scale,i%3===0?'#f4eac3':'#f7f5e9');
+        }
+      }
+    }
+    // Build an irregular, tapered tree skeleton. Stable RNG makes stages reproducible.
+    const mainNodes=[];
+    const wood=[];
+    const foliage=[];
+    const skeletonRand=random(237331);
+    mainNodes.push({x:0,y:0});
+    for(let i=1;i<=11;i++){
+      const p=mainNodes[i-1];
+      mainNodes.push({x:p.x+(i%3===0?4:i%2===0?-2.2:2.6)+(skeletonRand()-.5)*2.7,y:p.y-22.6});
+    }
+    // Wood segment: from p1 to p2, with bent controls and tapered bark.
+    function makeBranch(a,theta,length,width,depth,born,seed) {
+      const r=random(seed),angle=theta+(r()-.5)*.18;
+      const x=a.x+Math.sin(angle)*length,y=a.y-Math.cos(angle)*length;
+      const bend=(r()-.5)*length*.46;
+      const b={x,y};
+      const c1={x:a.x+Math.sin(angle)*length*.29+bend,y:a.y-Math.cos(angle)*length*.33};
+      const c2={x:a.x+Math.sin(angle)*length*.72+bend*.8,y:a.y-Math.cos(angle)*length*.75};
+      wood.push({a,b,c1,c2,width,born,seed,depth});
+      if(depth<=0){
+        // Many independent individual leaves, placed along short terminal shoots.
+        const n=37+Math.floor(r()*15);
+        for(let j=0;j<n;j++){
+          const sway=r()*Math.PI*2,spread=(2+Math.sqrt(r())*27);
+          const px=b.x+Math.cos(sway)*spread,py=b.y+Math.sin(sway)*spread*.87;
+          const life=clamp(born+.13+r()*(22-born)*.72,4.1,20.7);
+          foliage.push({x:px,y:py,size:3.5+r()*4.6,theta:r()*6.28,shade:r(),birth:life,seed:r()*1000});
+        }
+        return;
+      }
+      // Two new shoots at angled tips plus one occasional mid-shoot.
+      const side=.35+r()*.41;
+      const childLen=length*(.64+r()*.16);
+      makeBranch(b,angle-side,childLen,width*.64,depth-1,born+.47+r()*.25,seed*3+17);
+      makeBranch(b,angle+side,childLen*(.77+r()*.22),width*.62,depth-1,born+.63+r()*.34,seed*3+43);
+      if(depth>1 && r()>.28){
+        const from={x:lerp(a.x,b.x,.61),y:lerp(a.y,b.y,.61)};
+        makeBranch(from,angle+(r()>.5?1:-1)*(.58+r()*.36),childLen*.66,width*.38,depth-2,born+.73+r()*.46,seed*3+83);
+      }
+    }
+    // The older lower limbs become broad and crooked; the crown remains airy.
+    const primaries=[
+      [3,-1,1.02,93,5.0],[3.55,1,1.13,92,5.8],
+      [4.2,-1,1.02,113,6.6],[4.9,1,.97,101,7.6],
+      [5.5,-1,.88,107,8.4],[6.15,1,1.06,111,9.3],
+      [6.72,-1,.94,103,10.1],[7.34,1,.79,103,11.0],
+      [7.9,-1,.69,87,12.3],[8.45,1,.66,90,13.5],
+      [8.93,-1,.56,83,14.6],[9.4,1,.53,89,15.8],
+      [9.91,-1,.45,81,17.1],[10.26,1,.40,77,18.2]
+    ];
+    primaries.forEach((p,i)=>{
+      const [height,side,angle,length,born]=p;
+      const base=mainNodes[Math.floor(height)],next=mainNodes[Math.ceil(height)];
+      const f=height-Math.floor(height);
+      const at={x:lerp(base.x,next.x,f),y:lerp(base.y,next.y,f)};
+      makeBranch(at,side*angle,length,5.0+(11-height)*.18,3,born,9111+i*821);
+    });
+    // Upper central shoots make the crown naturally irregular rather than clipped.
+    for(let k=0;k<6;k++){
+      const p=mainNodes[8+k%4];
+      makeBranch(p,(k-2.5)*.13,47+(k%3)*9,2.6,2,9+k*1.7,17671+k*331);
+    }
+    foliage.sort((a,b)=>a.y-b.y); wood.sort((a,b)=>b.width-a.width);
+    // Screenshots are crisp on Retina displays; dynamic drawings are cached.
+    let cachedA=null,cachedB=null;
+    const stageImageCache=new Map();
+    const PALETTE=['#1f492f','#285c39','#326c42','#3e7944','#538d4c','#72a35a','#8dae69','#b7c67e'];
+    function drawBarkSegment(o,st) {
+      const reveal=ease(clamp((st-o.born+.07)/1.15));if(reveal<=.002)return;
+      const end={x:lerp(o.a.x,o.b.x,reveal),y:lerp(o.a.y,o.b.y,reveal)};
+      const cp1={x:lerp(o.a.x,o.c1.x,reveal),y:lerp(o.a.y,o.c1.y,reveal)};
+      const cp2={x:lerp(o.a.x,o.c2.x,reveal),y:lerp(o.a.y,o.c2.y,reveal)};
+      const w=o.width*(.70+.30*clamp((st-o.born)/8));
+      ctx.beginPath();ctx.moveTo(o.a.x,o.a.y);ctx.bezierCurveTo(cp1.x,cp1.y,cp2.x,cp2.y,end.x,end.y);
+      ctx.lineWidth=w;ctx.lineCap='round';ctx.strokeStyle='#463b2d';ctx.stroke();
+      ctx.lineWidth=w*.65;ctx.strokeStyle=o.depth>1?'#755b3e':'#715b42';ctx.stroke();
+      if(w>2.1){ctx.strokeStyle='rgba(213,169,110,.36)';ctx.lineWidth=w*.17;ctx.stroke();}
+    }
+    function actualTree(stage){
+      if(stage<5.7)return;
+      ctx.save();ctx.globalAlpha=clamp((stage-5.7)/1.95);
+      const n=clamp(stage/21), sx=.026+.675*Math.pow(n,.79),sy=.016+.585*Math.pow(n,.65);
+      ctx.translate(210,337);ctx.scale(sx,sy);
+      // Expanding roots that ground the silhouette.
+      const rootReveal=clamp((stage-9)/7);
+      if(rootReveal){ctx.save();ctx.globalAlpha=rootReveal;for(const side of [-1,1]){
+        ctx.beginPath();ctx.moveTo(0,-3);ctx.quadraticCurveTo(side*13,-5,side*26,6);ctx.strokeStyle='#685037';ctx.lineCap='round';ctx.lineWidth=6;ctx.stroke();
+        ctx.beginPath();ctx.moveTo(0,-3);ctx.quadraticCurveTo(side*12,-4,side*27,7);ctx.lineWidth=1.6;ctx.strokeStyle='#ac895d';ctx.stroke();
+      }ctx.restore();}
+      // Main trunk is thick at the base and tapers towards the crown.
+      for(let j=0;j<11;j++){
+        const p=mainNodes[j],q=mainNodes[j+1];
+        const w=lerp(20.6,2.3,j/11)*(0.64+.36*n);
+        ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.quadraticCurveTo((p.x+q.x)*.5+1.8,(p.y+q.y)*.5,q.x,q.y);
+        ctx.lineCap='round';ctx.lineWidth=w;ctx.strokeStyle='#4a3c2b';ctx.stroke();
+        ctx.lineWidth=w*.78;ctx.strokeStyle=grad(p.x-w,p.y,p.x+w,p.y,[[0,'#594632'],[.29,'#94704b'],[.60,'#a78155'],[1,'#594833']]);ctx.stroke();
+        ctx.lineWidth=Math.max(.65,w*.10);ctx.strokeStyle='rgba(233,193,137,.38)';ctx.stroke();
+        if(j<8){for(let k=0;k<3;k++){
+          const r=random(56561+j*18+k*59);ctx.beginPath();
+          const yy=p.y-5-r()*14,xx=p.x+(r()-.5)*w*.6;
+          ctx.moveTo(xx,yy);ctx.quadraticCurveTo(xx+1+r()*2,yy-6,xx-.3,yy-10-r()*6);
+          ctx.strokeStyle=k%2?'rgba(58,40,28,.30)':'rgba(235,193,128,.27)';ctx.lineWidth=.5;ctx.stroke();
+        }}
+      }
+      // Branches behind the leaves, with deterministic tapered bifurcations.
+      for(const seg of wood) drawBarkSegment(seg,stage);
+      // Some dark inner foliage gives the canopy depth, but no opaque round blobs.
+      for(let i=0;i<foliage.length;i++){
+        const l=foliage[i];const born=l.birth;
+        if(stage<born-.2)continue;
+        const grow=ease(clamp((stage-born+.2)/.94));if(grow<=0)continue;
+        const sz=l.size*(.35+.65*grow);
+        const shade=Math.min(7,Math.floor(l.shade*8));
+        // Backlit leaves are lighter high in the crown, left side stays darker.
+        const color=PALETTE[shade];
+        leaf(l.x,l.y,sz,l.theta,color,Math.min(1,grow*1.5));
+        if(l.seed>893 && grow>.7) leaf(l.x-1.1,l.y-1,sz*.51,l.theta+.09,'rgba(208,226,144,.49)',grow);
+      }
+      ctx.restore();
+    }
+    function seedAndSapling(stage,time){
+      if(stage<=0.001){
+        ellipse(210,340,16,4,'rgba(51,56,33,.28)');
+        ellipse(210,339,9,5,'#785637',-.25);ellipse(208.5,337.5,5.2,2.1,'#af8350',-.25);
+        return;
+      }
+      const opacity=clamp((8.15-stage)/2.5);if(opacity<=0)return;
+      ctx.save();ctx.globalAlpha=opacity;
+      const h=12+stage*15.1,tip=338-h;
+      const wind=Math.sin(time*.00068)*1.4;
+      ctx.beginPath();ctx.moveTo(210,338);ctx.bezierCurveTo(207,310,218+wind,tip+29,210+wind,tip);
+      ctx.lineCap='round';ctx.strokeStyle='#496f39';ctx.lineWidth=1.3+stage*.62;ctx.stroke();
+      ctx.lineWidth=.9;ctx.strokeStyle='#b5c97e';ctx.stroke();
+      const pairs=Math.floor(stage*1.33+1);
+      for(let i=0;i<pairs;i++){
+        const birth=.6+i*.71;const visibility=ease(clamp(stage-birth+.25));if(!visibility)continue;
+        const lvl=(i+1)/(pairs+1),x=210+wind*lvl,y=lerp(334,tip+9,lvl);
+        const side=i%2?1:-1,len=(10+stage*1.8+i%3*2)*visibility;
+        ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(x+side*4,y-5,x+side*9,y-8);
+        ctx.lineWidth=1.05;ctx.strokeStyle='#678b48';ctx.stroke();
+        leaf(x+side*(8+len*.3),y-8,len,side===1?-.30:Math.PI+.3,i%3?'#6f9e4b':'#a5c570',visibility,true);
+      }
+      leaf(208+wind,tip,11*ease(clamp(stage)), -.76,'#8cb95c',1,true);
+      leaf(214+wind,tip,12*ease(clamp(stage)),Math.PI+.68,'#b6cf76',1,true);
+      ctx.restore();
+    }
+    function staticTree(stage){
+      // Pure image for a given stage, independent of frame time (deterministic).
+      ctx.save();
+      actualTree(stage);
+      seedAndSapling(stage,0);
+      ctx.restore();
+    }
+    // Cache a handful of adjacent states to limit expensive canvas path work on iOS.
+    // Half-day snapshots: fewer costly canvas renderings on older iPhones.
+    const CACHE_STEP=2; // 0.5-day granularity, blended for seamless progression.
+    function cacheScene(frame){
+      if(stageImageCache.has(frame))return stageImageCache.get(frame);
+      const off=document.createElement('canvas');off.width=840;off.height=800;
+      const c=off.getContext('2d');
+      const previous=ctx;
+      ctx=c; c.setTransform(2,0,0,2,0,0); staticTree(frame/CACHE_STEP); ctx=previous;
+      stageImageCache.set(frame,off);
+      if(stageImageCache.size>5){const first=stageImageCache.keys().next().value;stageImageCache.delete(first);}
+      return off;
+    }
+
+    function particles(stage){
+      const around=stage<7?{x:210,y:264}:{x:210,y:165};
+      const r=random(71123+Math.ceil(stage)*87),now=performance.now();
+      falling=[];
+      for(let i=0;i<26;i++){
+        const x=around.x+(r()-.5)*190,y=around.y+(r()-.5)*135;
+        falling.push({x,y,vx:(r()-.5)*44,vy:18+r()*58,size:2.8+r()*5.6,angle:r()*6.28,spin:(r()-.5)*2.1,life:2.1+r()*2.3,delay:r()*.75,start:now,color:['#e8b862','#c7d37d','#79a75c','#f9e3a5'][Math.floor(r()*4)]});
+      }
+    }
+    function spawnFalling(stage){particles(stage);}
+    function floatingDetails(t,stage){
+      // Tiny drifting pollen/dust; slow movement sells a living environment.
+      const r=random(18883);
+      for(let i=0;i<26;i++){
+        const x=(r()*420+Math.sin(t*.00036+i)*7),y=60+r()*290+Math.sin(t*.00072+i*.51)*9;
+        const radius=.3+r()*.96;
+        ellipse(x,y,radius,radius,'rgba(255,246,202,.42)');
+      }
+      let alive=0;
+      for(const p of falling){
+        const elapsed=(t-p.start)/1000-p.delay;
+        if(elapsed<0){alive++;continue;}
+        if(elapsed>p.life)continue;
+        alive++;
+        const x=p.x+p.vx*elapsed+Math.sin(elapsed*4+p.angle)*14;
+        const y=p.y+p.vy*elapsed+16*elapsed*elapsed;
+        if(y>339)continue;
+        leaf(x,y,p.size,p.angle+p.spin*elapsed,p.color,clamp((p.life-elapsed)/.8));
+      }
+      if(!alive)falling=[];
+    }
+    let animationBoost=0;
+    function draw(now){
+      if(!ctx)return;
+      const display=ctx;
+      const sx=canvas.width/420,sy=canvas.height/400;
+      display.setTransform(sx,0,0,sy,0,0);
+      display.clearRect(0,0,420,400);
+      let stage=shownStage;
+      if(preview){
+        stage=preview.manual===null?Math.min(MAX_DAYS,Math.max(0,(now-preview.start)/PREVIEW_STEP_MS)):preview.manual;
+        const whole=Math.floor(stage);
+        if(whole!==preview.lastDay){
+          preview.lastDay=whole;previewLabels(whole);
+          if(whole>0 && !prefersReducedMotion.matches) spawnFalling(whole);
+        }
+      } else if(transition){
+        const p=clamp((now-transition.start)/transition.duration);
+        stage=lerp(transition.from,transition.to,ease(p));
+        animationBoost=Math.sin(p*Math.PI);
+        if(p>=1){shownStage=transition.to;transition=null;stage=shownStage;animationBoost=0;}
+      }
+      backdrop(prefersReducedMotion.matches?0:now,stage);
+      const v=clamp(stage)*0+clamp(stage,0,21);
+      if(stage<.001){seedAndSapling(0,0);} else {
+        const index=clamp(Math.floor(v*CACHE_STEP),0,21*CACHE_STEP),fraction=v*CACHE_STEP-index;
+        const a=cacheScene(index);const b=fraction>.015?cacheScene(Math.min(index+1,21*CACHE_STEP)):null;
+        const sway=prefersReducedMotion.matches?0:Math.sin(now*.0009)*.82*clamp(stage/14);
+        display.save();display.translate(sway,0);display.drawImage(a,0,0,420,400);
+        if(b){display.globalAlpha=fraction;display.drawImage(b,0,0,420,400);}
+        display.restore();
+      }
+      if(transition || (preview && preview.manual===null)) {
+        const glow=transition?animationBoost:Math.pow(Math.max(0,Math.sin((stage%1)*Math.PI)),3)*.35;
+        if(glow>.02){
+          const g=display.createRadialGradient(210,188,14,210,188,195);
+          g.addColorStop(0,`rgba(252,234,155,${glow*.10})`);g.addColorStop(.9,'rgba(255,242,196,0)');
+          display.fillStyle=g;display.fillRect(0,0,420,380);
+        }
+      }
+      if(!prefersReducedMotion.matches) floatingDetails(now,stage);
+    }
+  function resizeCanvas() {
+      const rect=canvas.getBoundingClientRect();
+      if(!rect.width || !rect.height)return;
+      // Cap iPhone DPR for battery and memory, keeping enough pixels for Retina sharpness.
+      const dpr=Math.min(2.35, window.devicePixelRatio || 1);
+      const w=Math.round(rect.width*dpr), h=Math.round(rect.height*dpr);
+      if(canvas.width!==w || canvas.height!==h) {canvas.width=w;canvas.height=h;}
+      draw(performance.now());
+    }
+    if('ResizeObserver' in window) new ResizeObserver(resizeCanvas).observe($('canvasHolder'));
+    window.addEventListener('resize',resizeCanvas);
+    function loop(t) {
+      // Off-screen canvases need no continuous painting; transition timing stays correct.
+      if (!document.hidden && canvasVisible && (t-lastFrame>48 || (transition && t-lastFrame>32))) {
+        draw(t); lastFrame=t;
+      }
+      requestAnimationFrame(loop);
+    }
+    updateUI({ scrollCurrent:true });
+    resizeCanvas();
+    requestAnimationFrame(loop);
+  })();
+  </script>
+</body>
+</html>
