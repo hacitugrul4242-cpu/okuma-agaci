@@ -4,12 +4,16 @@
 
 ## GitHub Pages ile yayımlama
 
-1. GitHub hesabında **public** `okuma-agaci` isimli yeni bir repository oluştur. Mevcut projelerin dosyalarını değiştirme.
-2. Bu ZIP içindeki dosya ve klasörleri (ZIP'in kendisini değil) deponun **köküne** yükle. `index.html`, `manifest.webmanifest`, `service-worker.js`, `icons/` ve `.nojekyll` aynı düzeyde olmalı.
-3. **Settings → Pages → Build and deployment → Source: Deploy from a branch → Branch: main → Folder: /(root) → Save** seç.
-4. Sayfa yayımlanınca `https://KULLANICI.github.io/okuma-agaci/` adresine iPhone Safari'den git.
-5. **Paylaş → Ana Ekrana Ekle** yolunu kullan. Varsa “Web Uygulaması Olarak Aç” seçeneğini aç.
-6. İlk çevrimiçi açılıştan sonra çevrimdışı kullanım için gereken dosyalar cihaza önbelleklenir. Uçak modunda açarak test et.
+Bu depo PWA dosyalarını içerir; dosyalar `main` dalının köküne yüklenmiştir.
+
+1. Depo sahibi **[Settings → Pages](https://github.com/hacitugrul4242-cpu/okuma-agaci/settings/pages)** bölümüne gitsin.
+2. **Build and deployment → Source: Deploy from a branch** seçsin.
+3. **Branch: main**, **Folder: /(root)** ayarlasın ve **Save** düğmesine bassın.
+4. GitHub Pages etkinleşince adres: **https://hacitugrul4242-cpu.github.io/okuma-agaci/**
+5. iPhone'da bu HTTPS adresini Safari'de açıp **Paylaş → Ana Ekrana Ekle** seç.
+6. İlk açılışta internet bağlantısı gerekir; önbellek hazır olduktan sonra uçak modunda yeniden açarak çevrimdışı çalışmayı test et.
+
+> GitHub Pages etkinleştirilmedikçe yukarıdaki uygulama adresi çalışmayabilir; kod yüklenmesi ve sitenin yayımlanması ayrı işlemlerdir.
 
 ## Özellikler
 
