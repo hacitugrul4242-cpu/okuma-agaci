@@ -91,6 +91,11 @@
     .welcome p { font-size: 13px; line-height: 1.65; color: #76837b; margin: 0 0 20px; }
     .tiny-label { font-size: 10px; letter-spacing: .15em; font-weight: 800; color: #87948b; }
     .today-panel { margin-top: 16px; padding: 20px; }
+    .start-date-field {display:grid;gap:7px;margin:17px 0 17px;}
+    .start-date-field label {font-size:12px;font-weight:780;color:#446b53;}
+    .start-date-field input {display:block;width:100%;min-width:0;min-height:52px;padding:10px 13px;border-radius:14px;border:1px solid #d3e2d4;background:#f6faf3;color:#294935;font-size:16px;}
+    .start-date-field input:focus-visible {outline:3px solid #97b99b;outline-offset:2px;}
+    .start-date-field .date-help {font-size:11px;color:#819084;line-height:1.5;margin:0;}
     .target-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
     .day-tag { padding: 7px 11px; background: #eff4eb; border-radius: 24px; font-size: 11px; font-weight: 800; color: #47724f; white-space: nowrap; }
     .target-main { display: flex; align-items: center; gap: 13px; margin: 15px 0 17px; }
@@ -230,11 +235,16 @@
       <div class="tiny-label" style="margin-bottom: 10px;">YOLCULUĞUN BAŞLIYOR</div>
       <h2 id="welcomeHeading">Bir sayfayla başla. 🌱</h2>
       <p>İlk gün sadece <strong>1 dakika</strong> oku. Her tamamlanan gün ağacının yeni bir dalına, tomurcuğuna veya kiraz çiçeğine dönüşsün.</p>
+      <div class="start-date-field">
+        <label for="startDate">Başlangıç gününü seç</label>
+        <input id="startDate" type="date" required aria-describedby="startDateHelp">
+        <p class="date-help" id="startDateHelp">Bugünü veya ileri bir tarihi seç. Günler telefonunun saatine göre gece 00.00'da değişir.</p>
+      </div>
       <button class="action" id="startBtn" type="button">
         Yolculuğa Başla
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 14 0M13 6l6 6-6 6"/></svg>
       </button>
-      <p class="microcopy">Başladığın andan itibaren 24 saatlik okuma günleri başlar.</p>
+      <p class="microcopy">Okuma günleri telefonunun yerel takvimine göre gece 00.00'da değişir.</p>
     </section>
 
     <section class="panel today-panel" id="todayPanel" aria-labelledby="todayTitle" hidden>
@@ -253,8 +263,8 @@
         <span id="completeLabel">Bugünü Tamamladım</span>
       </button>
       <p class="microcopy" id="actionHint">Hedefini bitirince işaretle; ağacın büyüsün.</p>
-      <div class="cycle-timer" id="cycleTimer" role="status" aria-live="off">24 saatlik günün başlamak üzere…</div>
-      <p class="cycle-rule">Her 24 saatte yalnızca o gün işaretlenebilir. Bir gün atlanırsa seri baştan başlar.</p>
+      <div class="cycle-timer" id="cycleTimer" role="status" aria-live="off">Yerel gün bilgisi hesaplanıyor…</div>
+      <p class="cycle-rule">Her takvim günü yalnızca kendi görevi işaretlenir. Gün kaçırılırsa gece 00.00’da yeni tohumla başlanır.</p>
       <div class="missed-notice" id="missedNotice" hidden role="status">Önceki serinde bir gün kaçırıldı. Yeni bir tohum ekildi; 1. günden tekrar başlıyorsun. 🌱</div>
     </section>
 
@@ -314,8 +324,7 @@
     'use strict';
     const KEY = 'okuma-agaci-v1';
     const MAX_DAYS = 21;
-    const DAY_MS = 24 * 60 * 60 * 1000;
-    const RULE_VERSION = 2;
+    const RULE_VERSION = 3;
     const schedule = [1, 1, 2, 2, 5, 5, 10, 10, 15, 15, 20, 20, 30, 30, 45, 45, 60, 60, 60, 60, 60];
     const $ = id => document.getElementById(id);
     const canvas = $('treeCanvas');
@@ -344,52 +353,75 @@
       const parts = ymd.split('-').map(Number);
       return Date.UTC(parts[0], parts[1] - 1, parts[2]) / 86400000;
     }
-    // Each day is a non-overlapping 24-hour window anchored to the exact start time.
-    // The tree advances only once per window; a missed window restarts the challenge.
-    function currentDay(at = Date.now()) {
-      if(!state) return 0;
-      return Math.max(1, Math.floor((at - state.startedAt)/DAY_MS)+1);
+    // Date arithmetic operates on YYYY-MM-DD calendar labels, not elapsed
+    // milliseconds. Therefore local midnight and daylight saving time are safe.
+    function addDays(ymd, amount) {
+      const [y,m,d]=ymd.split('-').map(Number);
+      return new Date(Date.UTC(y,m-1,d+amount)).toISOString().slice(0,10);
     }
     function validDate(str) {
       if (typeof str !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(str)) return false;
-      return localDate(new Date(Number(str.slice(0,4)), Number(str.slice(5,7))-1, Number(str.slice(8,10)))) === str;
+      const [y,m,d]=str.split('-').map(Number);
+      return localDate(new Date(y,m-1,d))===str;
     }
-    function makeState(at = Date.now(), missed = false) {
-      return {started:localDate(new Date(at)), startedAt:at, completed:[], completionTimes:[], lastSeenAt:at, ruleVersion:RULE_VERSION, missedNotice:missed};
+    function currentSlot(s, at) {
+      return daySerial(localDate(new Date(at)))-daySerial(s.started)+1;
+    }
+    function currentDay(at = Date.now()) {
+      return state ? currentSlot(state, at) : 0;
+    }
+    function startOfLocalDay(ymd) {
+      const [y,m,d]=ymd.split('-').map(Number);
+      return new Date(y,m-1,d).getTime();
+    }
+    function makeState(at = Date.now(), missed = false, selectedDate = localDate(new Date(at))) {
+      return {started:selectedDate, startedAt:at, completed:[], completionTimes:[], completedDates:[],
+        lastSeenAt:at, ruleVersion:RULE_VERSION, missedNotice:missed};
     }
     function migrateLegacy(o, at) {
-      // Old builds had only dates and no completion timestamps. We cannot prove
-      // historical compliance, so grandfather the completed total and enforce
-      // the strict 24-hour rule only from the upgrade onward.
-      const count = Math.min(MAX_DAYS, new Set(o.completed.filter(d=>Number.isInteger(d)&&d>=1&&d<=MAX_DAYS)).size);
-      const start = at - Math.max(0,count-1)*DAY_MS;
-      return {started:localDate(new Date(start)),startedAt:start,completed:Array.from({length:count},(_,i)=>i+1),
-        completionTimes:Array.from({length:count},(_,i)=>start+i*DAY_MS+1000),lastSeenAt:at,
-        ruleVersion:RULE_VERSION,missedNotice:false};
+      // Previous version used 24-hour windows. Preserve every completed day;
+      // avoid historical penalties because its old time boundaries were different.
+      const old=Array.isArray(o.completed)?o.completed:[];
+      const count=Math.min(MAX_DAYS,new Set(old.filter(v=>Number.isInteger(v)&&v>=1&&v<=MAX_DAYS)).size);
+      const today=localDate(new Date(at));
+      const times=Array.isArray(o.completionTimes)?o.completionTimes:[];
+      const doneToday=count>0 && o.ruleVersion===2 && Number.isFinite(times[count-1]) &&
+        localDate(new Date(times[count-1]))===today;
+      const start=addDays(today, -(count===MAX_DAYS?count-1:(doneToday?count-1:count)));
+      const completed=Array.from({length:count},(_,i)=>i+1);
+      const completedDates=completed.map((_,i)=>addDays(start,i));
+      const completionTimes=completedDates.map(d=>startOfLocalDay(d));
+      return {started:start,startedAt:at,completed,completionTimes,completedDates,
+        lastSeenAt:at,ruleVersion:RULE_VERSION,missedNotice:false};
     }
-    function normalizeStrict(o, at) {
-      if (!o || o.ruleVersion !== RULE_VERSION || !Number.isFinite(o.startedAt) || o.startedAt > at + 60000 ||
-          !Array.isArray(o.completed) || !Array.isArray(o.completionTimes) || o.completed.length !== o.completionTimes.length ||
-          o.completed.length>MAX_DAYS) return null;
-      const clean={started:localDate(new Date(o.startedAt)),startedAt:o.startedAt,
-        completed:[],completionTimes:[],lastSeenAt:Number.isFinite(o.lastSeenAt)?o.lastSeenAt:o.startedAt,
+    function normalizeCalendar(o, at) {
+      if(!o || o.ruleVersion!==RULE_VERSION || !validDate(o.started) ||
+         !Number.isFinite(o.startedAt) || o.startedAt>at+60000 ||
+         !Array.isArray(o.completed) || !Array.isArray(o.completionTimes) ||
+         !Array.isArray(o.completedDates) || o.completed.length!==o.completionTimes.length ||
+         o.completed.length!==o.completedDates.length || o.completed.length>MAX_DAYS) return null;
+      const cleaned={started:o.started,startedAt:o.startedAt,completed:[],completionTimes:[],completedDates:[],
+        lastSeenAt:Number.isFinite(o.lastSeenAt)?o.lastSeenAt:o.startedAt,
         ruleVersion:RULE_VERSION,missedNotice:!!o.missedNotice};
       for(let i=0;i<o.completed.length;i++){
-        const t=o.completionTimes[i];
-        if(o.completed[i]!==i+1 || !Number.isFinite(t) || t<o.startedAt+i*DAY_MS ||
-          t>=o.startedAt+(i+1)*DAY_MS || t>at+60000) return null;
-        clean.completed.push(i+1);clean.completionTimes.push(t);
+        const t=o.completionTimes[i],expected=addDays(o.started,i);
+        if(o.completed[i]!==i+1 || o.completedDates[i]!==expected ||
+           !Number.isFinite(t) || t>at+60000 ||
+           (i && t<o.completionTimes[i-1])) return null;
+        cleaned.completed.push(i+1);
+        cleaned.completionTimes.push(t);
+        cleaned.completedDates.push(expected);
       }
-      return clean;
+      return cleaned;
     }
     function readState() {
       try {
         const o=JSON.parse(localStorage.getItem(KEY));
-        if(!o) return null;
+        if(!o)return null;
         const at=Date.now();
-        const restored=o.ruleVersion===RULE_VERSION?normalizeStrict(o,at):
+        const restored=o.ruleVersion===RULE_VERSION?normalizeCalendar(o,at):
           (validDate(o.started)&&Array.isArray(o.completed)?migrateLegacy(o,at):null);
-        if (restored && o.ruleVersion!==RULE_VERSION) localStorage.setItem(KEY,JSON.stringify(restored));
+        if(restored && o.ruleVersion!==RULE_VERSION) localStorage.setItem(KEY,JSON.stringify(restored));
         return restored;
       } catch { return null; }
     }
@@ -398,38 +430,43 @@
       const h=Math.floor(seconds/3600),m=Math.floor((seconds%3600)/60),sec=seconds%60;
       return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
     }
-    function clockWentBack(at = Date.now()) {
-      return !!(state && at+120000 < state.lastSeenAt);
+    function clockWentBack(at=Date.now()) {
+      return !!(state && at+120000<state.lastSeenAt);
     }
-    function ensureCycle(at = Date.now()) {
-      if(!state) return false;
-      if(clockWentBack(at)) return false;
-      if(state.completed.length===MAX_DAYS) return false; // 21/21 is permanent until manual reset.
+    function ensureCycle(at=Date.now()) {
+      if(!state || clockWentBack(at) || state.completed.length===MAX_DAYS) return false;
       const slot=currentDay(at);
-      if(slot > state.completed.length+1) {
+      if(slot>state.completed.length+1) {
         if(preview) stopPreview();
         const previous=state.completed.length;
-        state=makeState(at,true);persist();
-        falling=[];
-        showToast(`Bir okuma günü kaçırıldı (${previous}/21). Yeni tohum ekildi. 🌱`);
+        state=makeState(at,true);persist();falling=[];
+        showToast(`Bir takvim günü kaçırıldı (${previous}/21). Yeni tohum ekildi. 🌱`);
         updateUI({animate:true,scrollCurrent:true});
         return true;
       }
-      if(at > state.lastSeenAt+60000){state.lastSeenAt=at;persist();}
+      if(at>state.lastSeenAt+60000){state.lastSeenAt=at;persist();}
       return false;
     }
-    function updateCountdown(at = Date.now()) {
-      if(!state) return;
+    function updateCountdown(at=Date.now()) {
+      if(!state)return;
       const day=currentDay(at),node=$('cycleTimer');
-      if(day>MAX_DAYS || state.completed.length===MAX_DAYS){node.textContent='21 gün tamamlandı! Sakura ağacın çiçek açtı. 🌸';return;}
-      if(clockWentBack(at)) {
-        node.textContent='Telefonun saati geriye alınmış görünüyor. Okuma işaretleme geçici olarak kilitlendi.';
+      if(state.completed.length===MAX_DAYS){node.textContent='21 gün tamamlandı! Sakura ağacın çiçek açtı. 🌸';return;}
+      if(clockWentBack(at)){
+        node.textContent='Telefonun saati geriye alınmış görünüyor. İşaretleme geçici olarak kilitlendi.';
         $('completeBtn').disabled=true;$('dockBtn').disabled=true;
         return;
       }
-      const done=state.completed.includes(day),end=state.startedAt+day*DAY_MS;
-      node.innerHTML=done?`🌸 Bugün tamamlandı. Sonraki gün <strong>${countdown(end-at)}</strong> sonra açılacak.`:
-        `⏳ ${day}. günün bitmesine <strong>${countdown(end-at)}</strong> kaldı. Hedefini kaçırma!`;
+      if(day<1){
+        const remaining=startOfLocalDay(state.started)-at;
+        node.innerHTML=`📅 Seçtiğin başlangıç günü <strong>${state.started}</strong> • Başlamasına <strong>${countdown(remaining)}</strong> kaldı.`;
+        $('completeBtn').disabled=true;$('dockBtn').disabled=true;
+        return;
+      }
+      if(day>MAX_DAYS){node.textContent='Okuma yolculuğu tamamlandı.';return;}
+      const done=state.completed.includes(day);
+      const remaining=startOfLocalDay(addDays(localDate(new Date(at)),1))-at;
+      node.innerHTML=done?`🌸 Bugün tamamlandı. Yeni gün gece 00.00’da açılacak: <strong>${countdown(remaining)}</strong>`:
+        `⏳ Bugünün bitmesine <strong>${countdown(remaining)}</strong> kaldı. Saat 00.00’da gün değişir.`;
       $('completeBtn').disabled=false;$('dockBtn').disabled=false;
     }
     function persist() {
@@ -466,18 +503,22 @@
       const count = state ? state.completed.length : 0;
       const day = currentDay();
       $('welcomePanel').hidden = Boolean(state);
+      if(!state){const field=$('startDate');field.min=localDate();if(!field.value || field.value<field.min)field.value=field.min;}
       $('todayPanel').hidden = !state || day > MAX_DAYS;
       $('endPanel').hidden = !state || day <= MAX_DAYS;
       $('resetBtn').hidden = !state;
       $('exportBtn').disabled = !state;
       if (state && day <= MAX_DAYS) {
-        const done = state.completed.includes(day);
-        $('dayTag').textContent = `Gün ${day} / 21`;
-        $('targetNumber').innerHTML = `${schedule[day-1]} <span>dk</span>`;
+        const waiting=day<1, shownDay=Math.max(1,day);
+        const done = !waiting && state.completed.includes(day);
+        $('todayTitle').textContent=waiting?'BAŞLANGIÇ GÜNÜNÜ BEKLİYORUZ':'BUGÜNÜN OKUMA HEDEFİ';
+        $('dayTag').textContent = waiting?`${state.started} • Başlayacak`:`Gün ${day} / 21`;
+        $('targetNumber').innerHTML = `${schedule[shownDay-1]} <span>dk</span>`;
         $('targetDescription').textContent = done ? 'Bugün için hedefini tamamladın' : 'Bugün kendine ayıracağın zaman';
         $('completeBtn').classList.toggle('undo', done);
         $('completeLabel').textContent = done ? 'Bugünü Geri Al' : 'Bugünü Tamamladım';
-        $('actionHint').textContent = done ? 'Çiçeklerin canlandı! Yarın yeni bir 24 saatlik gün başlayacak.' : 'Hedefini tamamla, bir kiraz çiçeği daha açsın.';
+        $('actionHint').textContent = waiting?'Seçtiğin tarihte saat 00.00’dan itibaren işaretleyebilirsin.':done?'Çiçeklerin canlandı! Yarın gece 00.00’da yeni gün açılacak.':'Hedefini tamamla, bir kiraz çiçeği daha açsın.';
+        $('completeBtn').disabled=waiting;
       }
       if (state && day > MAX_DAYS) {
         $('endText').textContent = `21 günün ${count} gününü tamamladın. Ağacın, verdiğin emeğin hatırası olarak burada kalıyor.`;
@@ -520,7 +561,7 @@
         const row = document.createElement('div');
         row.className = `day-row${done ? ' done' : ''}${active ? ' current' : ''}`;
         row.setAttribute('role', 'listitem');
-        const status = done ? 'Tamamlandı' : active ? 'Bugün' : '🔒 Kilitli';
+        const status = done ? 'Tamamlandı' : active ? 'Bugün' : (state && today<1 && day===1 ? 'Başlayacak' : '🔒 Kilitli');
         if (!done && !active) row.classList.add('locked');
         row.innerHTML = `<div class="day-circle" aria-hidden="true">${done ? '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4.5 4.5L19 7"/></svg>' : day}</div><div><span class="day-name">${day}. Gün</span><span class="day-target">${schedule[day-1]} dakika okuma</span></div><span class="day-state">${status}</span>`;
         fragment.append(row);
@@ -575,10 +616,13 @@
     function start() {
       if (state) return;
       if (preview) stopPreview();
-      state = makeState();
+      const at=Date.now(), chosen=$('startDate').value, today=localDate(new Date(at));
+      if(!validDate(chosen) || chosen<today){showToast('Başlangıç için bugünü veya ileri bir tarihi seç.');return;}
+      state=makeState(at,false,chosen);
       persist();
-      updateUI({ scrollCurrent: true });
-      $('completeBtn').focus({ preventScroll: true });
+      updateUI({scrollCurrent:true});
+      if(chosen===today) $('completeBtn').focus({preventScroll:true});
+      else showToast(`${chosen} tarihinde gece 00.00'da okumaya başlayabilirsin. 🌱`);
     }
     function toggleToday() {
       if (!state) return;
@@ -587,15 +631,16 @@
       if(clockWentBack(at)){showToast('Cihaz saati geriye alınmış. Güvenilir zaman gelene kadar işaretleme kapalı.');return;}
       if(ensureCycle(at)) return;
       const d=currentDay(at);
-      if(d<1 || d>MAX_DAYS) return;
+      if(d<1){showToast('Başlangıç tarihin henüz gelmedi.');return;}
+      if(d>MAX_DAYS)return;
       // Prevent marking future or past days, even if the DOM is manipulated.
-      if(d!==state.completed.length+1 && d!==state.completed.length){showToast('Sadece içinde bulunduğun 24 saatlik gün işaretlenebilir.');return;}
+      if(d!==state.completed.length+1 && d!==state.completed.length){showToast('Sadece bugünün görevi işaretlenebilir.');return;}
       const done=state.completed.includes(d);
       if(done){
-        state.completed.pop();state.completionTimes.pop();
+        state.completed.pop();state.completionTimes.pop();state.completedDates.pop();
       } else {
         if(state.completed.length!==d-1) {showToast('Önceki gün tamamlanmadan devam edilemez.');return;}
-        state.completed.push(d);state.completionTimes.push(at);
+        state.completed.push(d);state.completionTimes.push(at);state.completedDates.push(localDate(new Date(at)));
         state.missedNotice=false;
       }
       state.lastSeenAt=Math.max(state.lastSeenAt,at);
@@ -619,7 +664,7 @@
     // The JSON file contains no secrets and is never sent to a server.
     function exportBackup() {
       if (!state) { showToast('Önce okumaya başla.'); return; }
-      const data = {format:'okuma-agaci-backup', version:2, exportedAt:new Date().toISOString(), data:{...state, completed:[...state.completed], completionTimes:[...state.completionTimes]}};
+      const data = {format:'okuma-agaci-backup', version:3, exportedAt:new Date().toISOString(), data:{...state, completed:[...state.completed], completionTimes:[...state.completionTimes], completedDates:[...state.completedDates]}};
       const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});
       const u = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -631,22 +676,20 @@
     function validateBackup(raw) {
       if(!raw || typeof raw!=='object' || Array.isArray(raw)) throw new Error('Dosya biçimi hatalı.');
       let b;
-      if(raw.format==='okuma-agaci-backup' && (raw.version===2 || raw.version===1)) b=raw.data;
+      if(raw.format==='okuma-agaci-backup' && [1,2,3].includes(raw.version)) b=raw.data;
       else if(!raw.format && raw.started && Array.isArray(raw.completed)) b=raw;
       else throw new Error('Bu dosya Okuma Ağacı yedeği değil.');
       if(!b || !validDate(b.started) || !Array.isArray(b.completed)) throw new Error('Yedekte geçersiz gün verisi var.');
-      let migrated;
+      let restored;
       if(b.ruleVersion===RULE_VERSION){
-        migrated=normalizeStrict(b,Date.now());
-        if(!migrated) throw new Error('24 saatlik kurala uymayan kayıt bulundu.');
-        // Do not restore a backup that would already have a missing day.
-        if(migrated.completed.length<MAX_DAYS && currentSlot(migrated,Date.now())>migrated.completed.length+1)
-          throw new Error('Bu yedekteki okuma serisi artık süresi geçtiği için devam edemez.');
-        migrated.lastSeenAt=Date.now();
-      } else migrated=migrateLegacy(b,Date.now());
-      return migrated;
+        restored=normalizeCalendar(b,Date.now());
+        if(!restored) throw new Error('Takvim günü kayıtlarında hata bulundu.');
+        if(restored.completed.length<MAX_DAYS && currentSlot(restored,Date.now())>restored.completed.length+1)
+          throw new Error('Bu yedekteki seride gün kaçırılmış; eski seri geri yüklenemez.');
+        restored.lastSeenAt=Date.now();
+      } else restored=migrateLegacy(b,Date.now());
+      return restored;
     }
-    function currentSlot(s,at) {return Math.max(1,Math.floor((at-s.startedAt)/DAY_MS)+1);}
     async function importBackup(file) {
       if(!file) return;
       if(file.size>65536) {showToast('Yedek dosyası çok büyük.');return;}
@@ -701,6 +744,7 @@
       $('previewLabel').textContent = 'Önizlemeyi Kapat'; $('previewIcon').textContent = '✕';
       $('previewNote').textContent = 'Günleri kaydırarak ağacının gelişimini incele.';
     });
+    $('startDate').min=localDate();$('startDate').value=localDate();
     $('startBtn').addEventListener('click', start);
     $('dockBtn').addEventListener('click', toggleToday);
     $('completeBtn').addEventListener('click', toggleToday);
@@ -753,8 +797,7 @@
     }
     const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
     const lerp=(a,b,t)=>a+(b-a)*t;
-    const ease=t=>{t=clamp(t);return t*t*(3-2*t);};
-    function ellipse(x,y,rx,ry,color,rot=0) {
+    const ease=t=>{t=clamp(t);return t*t*(3-2*t);};    function ellipse(x,y,rx,ry,color,rot=0) {
       ctx.save();ctx.translate(x,y);ctx.rotate(rot);ctx.beginPath();ctx.ellipse(0,0,Math.max(.02,rx),Math.max(.02,ry),0,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();ctx.restore();
     }
     function grad(x,y,xx,yy,stops) { const g=ctx.createLinearGradient(x,y,xx,yy);for(const [p,c] of stops)g.addColorStop(p,c);return g; }
@@ -904,7 +947,7 @@
     for(let i=0;i<foliage.length;i+=3){
       const l=foliage[i];const q=bloomRand();
       if(q>.82) continue;
-      const born=Math.max(l.birth+.15,10.7+bloomRand()*8.15);
+      const born=10.7+bloomRand()*8.15;
       const blossomsPerShoot=bloomRand()>.66?2:1;
       for(let z=0;z<blossomsPerShoot;z++) blooms.push({
         x:l.x+(bloomRand()-.5)*11,
@@ -997,7 +1040,8 @@
       ctx.lineCap='round';ctx.strokeStyle='#496f39';ctx.lineWidth=1.3+stage*.62;ctx.stroke();
       ctx.lineWidth=.9;ctx.strokeStyle='#b5c97e';ctx.stroke();
       const pairs=Math.floor(stage*1.33+1);
-      for(let i=0;i<pairs;i++){        const birth=.6+i*.71;const visibility=ease(clamp(stage-birth+.25));if(!visibility)continue;
+      for(let i=0;i<pairs;i++){
+        const birth=.6+i*.71;const visibility=ease(clamp(stage-birth+.25));if(!visibility)continue;
         const lvl=(i+1)/(pairs+1),x=210+wind*lvl,y=lerp(334,tip+9,lvl);
         const side=i%2?1:-1,len=(10+stage*1.8+i%3*2)*visibility;
         ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(x+side*4,y-5,x+side*9,y-8);
