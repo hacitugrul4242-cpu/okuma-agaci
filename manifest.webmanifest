@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Okuma Ağacı — 21 Günlük Sakura",
   "short_name": "Okuma Ağacı",
-  "description": "21 günlük okuma serini tamamlayarak çiçek açan sakura ağacını büyüt.",
+  "description": "Telefonunun yerel takvimine göre 21 gün oku; Sakura ağacını çiçeklendir.",
   "lang": "tr",
   "dir": "ltr",
   "start_url": "./",
