@@ -8,13 +8,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="format-detection" content="telephone=no">
   <meta name="apple-mobile-web-app-title" content="Okuma Ağacı">
-  <meta name="description" content="21 günde kitap okuma alışkanlığı kazanırken ağacını büyüt.">
+  <meta name="description" content="21 günlük okuma serini tamamla; her gün sakura ağacın çiçek açsın.">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
   <meta name="application-name" content="Okuma Ağacı">
   <meta name="color-scheme" content="light">
-  <title>Okuma Ağacı — 21 Günlük Okuma Alışkanlığı</title>
+  <title>Okuma Ağacı 🌸 — 21 Günlük Okuma Alışkanlığı</title>
   <style>
     :root {
       color-scheme: light;
@@ -24,7 +24,7 @@
       --muted: #718078;
       --forest: #245b43;
       --forest-dark: #174531;
-      --sage: #eaf0e7;
+      --sage: #f7eaf0;
       --border: #e7ece5;
       --radius: 24px;
       --shadow: 0 12px 38px rgba(37, 69, 46, .055);
@@ -111,6 +111,12 @@
     .action.undo { color: #42644d; background: #edf3e9; box-shadow: none; }
     .action.undo:hover { background: #e3eddd; }
     .microcopy { min-height: 18px; text-align: center; font-size: 11px; color: #91a095; margin: 10px 0 0; }
+    .cycle-timer { margin: 12px 0 0; border-radius: 13px; padding: 11px 13px; font-size: 12px; line-height: 1.55; color:#745668; background:linear-gradient(115deg,#fff2f6,#f5f7eb); border:1px solid #f3e5e7; font-variant-numeric:tabular-nums; }
+    .cycle-timer strong { color:#864b66; }
+    .cycle-rule { margin:7px 1px 0; text-align:center; font-size:11px; color:#9b858d; }
+    .missed-notice {padding:14px 16px; margin-top:13px; background:#fff6f2; border:1px solid #f2dcd5; color:#855442; border-radius:16px; line-height:1.55; font-size:12px; }
+    .action:disabled { background:#a8b4a5 !important; color:#fff !important; opacity:.75; cursor:not-allowed; transform:none; box-shadow:none; }
+    .day-row.locked .day-state {color:#a0a5a3; }
     .progress-panel { margin-top: 18px; padding: 20px 20px 18px; }
     .section-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
     .section-header h2 { font-size: 18px; line-height: 1.25; letter-spacing: -.035em; margin: 0; }
@@ -216,19 +222,19 @@
       <button type="button" class="preview-button" id="previewBtn" aria-pressed="false">
         <span id="previewIcon" aria-hidden="true">▶</span><span id="previewLabel">21 Günlük Büyümeyi İzle</span>
       </button>
-      <span class="preview-note" id="previewNote">Tohumdan canlı bir ağaca • Kayıtların değişmez</span>
+      <span class="preview-note" id="previewNote">Tohumdan çiçek açan sakuraya • Kayıtların değişmez</span>
       <div class="scrub-row" id="scrubRow" hidden><span>🌰</span><input type="range" id="previewRange" min="0" max="21" value="0" step="1" aria-label="Önizleme gününü seç"><span>🌳</span><span id="scrubValue">0. gün</span></div>
     </div>
 
     <section class="panel welcome" id="welcomePanel" aria-labelledby="welcomeHeading">
       <div class="tiny-label" style="margin-bottom: 10px;">YOLCULUĞUN BAŞLIYOR</div>
       <h2 id="welcomeHeading">Bir sayfayla başla. 🌱</h2>
-      <p>İlk gün sadece <strong>1 dakika</strong> oku. Her tamamlanan gün, ağacında yeni bir dal ya da yaprağa dönüşsün.</p>
+      <p>İlk gün sadece <strong>1 dakika</strong> oku. Her tamamlanan gün ağacının yeni bir dalına, tomurcuğuna veya kiraz çiçeğine dönüşsün.</p>
       <button class="action" id="startBtn" type="button">
         Yolculuğa Başla
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 14 0M13 6l6 6-6 6"/></svg>
       </button>
-      <p class="microcopy">Başlangıç tarihi bugün olarak kaydedilir.</p>
+      <p class="microcopy">Başladığın andan itibaren 24 saatlik okuma günleri başlar.</p>
     </section>
 
     <section class="panel today-panel" id="todayPanel" aria-labelledby="todayTitle" hidden>
@@ -247,6 +253,9 @@
         <span id="completeLabel">Bugünü Tamamladım</span>
       </button>
       <p class="microcopy" id="actionHint">Hedefini bitirince işaretle; ağacın büyüsün.</p>
+      <div class="cycle-timer" id="cycleTimer" role="status" aria-live="off">24 saatlik günün başlamak üzere…</div>
+      <p class="cycle-rule">Her 24 saatte yalnızca o gün işaretlenebilir. Bir gün atlanırsa seri baştan başlar.</p>
+      <div class="missed-notice" id="missedNotice" hidden role="status">Önceki serinde bir gün kaçırıldı. Yeni bir tohum ekildi; 1. günden tekrar başlıyorsun. 🌱</div>
     </section>
 
     <section class="ended" id="endPanel" hidden aria-live="polite"><h2>21 günlük yolculuk sona erdi 🌳</h2><p id="endText">Tamamladığın her gün, ağacında iz bıraktı.</p></section>
@@ -305,6 +314,8 @@
     'use strict';
     const KEY = 'okuma-agaci-v1';
     const MAX_DAYS = 21;
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    const RULE_VERSION = 2;
     const schedule = [1, 1, 2, 2, 5, 5, 10, 10, 15, 15, 20, 20, 30, 30, 45, 45, 60, 60, 60, 60, 60];
     const $ = id => document.getElementById(id);
     const canvas = $('treeCanvas');
@@ -319,6 +330,7 @@
     let lastFrame = 0;
     let toastTimeout;
     let lastLocalDate = localDate();
+    let lastWindow = -1;
     let lastFocus = null;
     let todayVisible = true;
     let canvasVisible = true;
@@ -332,19 +344,93 @@
       const parts = ymd.split('-').map(Number);
       return Date.UTC(parts[0], parts[1] - 1, parts[2]) / 86400000;
     }
-    function currentDay() { return state ? Math.max(1, Math.floor(daySerial(localDate()) - daySerial(state.started)) + 1) : 0; }
+    // Each day is a non-overlapping 24-hour window anchored to the exact start time.
+    // The tree advances only once per window; a missed window restarts the challenge.
+    function currentDay(at = Date.now()) {
+      if(!state) return 0;
+      return Math.max(1, Math.floor((at - state.startedAt)/DAY_MS)+1);
+    }
     function validDate(str) {
       if (typeof str !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(str)) return false;
       return localDate(new Date(Number(str.slice(0,4)), Number(str.slice(5,7))-1, Number(str.slice(8,10)))) === str;
     }
+    function makeState(at = Date.now(), missed = false) {
+      return {started:localDate(new Date(at)), startedAt:at, completed:[], completionTimes:[], lastSeenAt:at, ruleVersion:RULE_VERSION, missedNotice:missed};
+    }
+    function migrateLegacy(o, at) {
+      // Old builds had only dates and no completion timestamps. We cannot prove
+      // historical compliance, so grandfather the completed total and enforce
+      // the strict 24-hour rule only from the upgrade onward.
+      const count = Math.min(MAX_DAYS, new Set(o.completed.filter(d=>Number.isInteger(d)&&d>=1&&d<=MAX_DAYS)).size);
+      const start = at - Math.max(0,count-1)*DAY_MS;
+      return {started:localDate(new Date(start)),startedAt:start,completed:Array.from({length:count},(_,i)=>i+1),
+        completionTimes:Array.from({length:count},(_,i)=>start+i*DAY_MS+1000),lastSeenAt:at,
+        ruleVersion:RULE_VERSION,missedNotice:false};
+    }
+    function normalizeStrict(o, at) {
+      if (!o || o.ruleVersion !== RULE_VERSION || !Number.isFinite(o.startedAt) || o.startedAt > at + 60000 ||
+          !Array.isArray(o.completed) || !Array.isArray(o.completionTimes) || o.completed.length !== o.completionTimes.length ||
+          o.completed.length>MAX_DAYS) return null;
+      const clean={started:localDate(new Date(o.startedAt)),startedAt:o.startedAt,
+        completed:[],completionTimes:[],lastSeenAt:Number.isFinite(o.lastSeenAt)?o.lastSeenAt:o.startedAt,
+        ruleVersion:RULE_VERSION,missedNotice:!!o.missedNotice};
+      for(let i=0;i<o.completed.length;i++){
+        const t=o.completionTimes[i];
+        if(o.completed[i]!==i+1 || !Number.isFinite(t) || t<o.startedAt+i*DAY_MS ||
+          t>=o.startedAt+(i+1)*DAY_MS || t>at+60000) return null;
+        clean.completed.push(i+1);clean.completionTimes.push(t);
+      }
+      return clean;
+    }
     function readState() {
       try {
-        const o = JSON.parse(localStorage.getItem(KEY));
-        if (!o || !validDate(o.started) || !Array.isArray(o.completed)) return null;
-        const elapsed = Math.max(0, Math.floor(daySerial(localDate()) - daySerial(o.started)) + 1);
-        const completed = [...new Set(o.completed.filter(d => Number.isInteger(d) && d >= 1 && d <= MAX_DAYS && d <= elapsed))].sort((a,b) => a-b);
-        return { started: o.started, completed };
+        const o=JSON.parse(localStorage.getItem(KEY));
+        if(!o) return null;
+        const at=Date.now();
+        const restored=o.ruleVersion===RULE_VERSION?normalizeStrict(o,at):
+          (validDate(o.started)&&Array.isArray(o.completed)?migrateLegacy(o,at):null);
+        if (restored && o.ruleVersion!==RULE_VERSION) localStorage.setItem(KEY,JSON.stringify(restored));
+        return restored;
       } catch { return null; }
+    }
+    function countdown(ms) {
+      const seconds=Math.max(0,Math.ceil(ms/1000));
+      const h=Math.floor(seconds/3600),m=Math.floor((seconds%3600)/60),sec=seconds%60;
+      return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+    }
+    function clockWentBack(at = Date.now()) {
+      return !!(state && at+120000 < state.lastSeenAt);
+    }
+    function ensureCycle(at = Date.now()) {
+      if(!state) return false;
+      if(clockWentBack(at)) return false;
+      if(state.completed.length===MAX_DAYS) return false; // 21/21 is permanent until manual reset.
+      const slot=currentDay(at);
+      if(slot > state.completed.length+1) {
+        if(preview) stopPreview();
+        const previous=state.completed.length;
+        state=makeState(at,true);persist();
+        falling=[];
+        showToast(`Bir okuma günü kaçırıldı (${previous}/21). Yeni tohum ekildi. 🌱`);
+        updateUI({animate:true,scrollCurrent:true});
+        return true;
+      }
+      if(at > state.lastSeenAt+60000){state.lastSeenAt=at;persist();}
+      return false;
+    }
+    function updateCountdown(at = Date.now()) {
+      if(!state) return;
+      const day=currentDay(at),node=$('cycleTimer');
+      if(day>MAX_DAYS || state.completed.length===MAX_DAYS){node.textContent='21 gün tamamlandı! Sakura ağacın çiçek açtı. 🌸';return;}
+      if(clockWentBack(at)) {
+        node.textContent='Telefonun saati geriye alınmış görünüyor. Okuma işaretleme geçici olarak kilitlendi.';
+        $('completeBtn').disabled=true;$('dockBtn').disabled=true;
+        return;
+      }
+      const done=state.completed.includes(day),end=state.startedAt+day*DAY_MS;
+      node.innerHTML=done?`🌸 Bugün tamamlandı. Sonraki gün <strong>${countdown(end-at)}</strong> sonra açılacak.`:
+        `⏳ ${day}. günün bitmesine <strong>${countdown(end-at)}</strong> kaldı. Hedefini kaçırma!`;
+      $('completeBtn').disabled=false;$('dockBtn').disabled=false;
     }
     function persist() {
       try {
@@ -361,7 +447,7 @@
     }
     function setCanvasLabel() {
       const count = state ? state.completed.length : 0;
-      canvas.setAttribute('aria-label', count === 0 ? 'Topraktaki bir tohum; henüz tamamlanmış okuma günü yok.' : `${count} okuma günüyle büyüyen, dalları ve yaprakları olan bir ağaç.`);
+      canvas.setAttribute('aria-label', count === 0 ? 'Topraktaki bir tohum; henüz tamamlanmış okuma günü yok.' : `${count} okuma günüyle büyüyen, dalları ve pembe kiraz çiçekleri olan bir ağaç.`);
     }
     function syncDock() {
       const day = currentDay();
@@ -391,11 +477,13 @@
         $('targetDescription').textContent = done ? 'Bugün için hedefini tamamladın' : 'Bugün kendine ayıracağın zaman';
         $('completeBtn').classList.toggle('undo', done);
         $('completeLabel').textContent = done ? 'Bugünü Geri Al' : 'Bugünü Tamamladım';
-        $('actionHint').textContent = done ? 'Harika! İstersen bugünkü işaretlemeyi geri alabilirsin.' : 'Hedefini bitirince işaretle; ağacın büyüsün.';
+        $('actionHint').textContent = done ? 'Çiçeklerin canlandı! Yarın yeni bir 24 saatlik gün başlayacak.' : 'Hedefini tamamla, bir kiraz çiçeği daha açsın.';
       }
       if (state && day > MAX_DAYS) {
         $('endText').textContent = `21 günün ${count} gününü tamamladın. Ağacın, verdiğin emeğin hatırası olarak burada kalıyor.`;
       }
+      $('missedNotice').hidden = !(state && state.missedNotice);
+      if(state) updateCountdown();
       $('progressCount').textContent = `${count} / 21 tamamlandı`;
       $('progressBar').setAttribute('aria-valuenow', count);
       $('progressFill').style.width = `${count / 21 * 100}%`;
@@ -405,10 +493,10 @@
       else if (count >= 3 && count <= 6) word = 'Fidan';
       else if (count >= 7 && count <= 12) word = 'Genç ağaç';
       else if (count >= 13 && count <= 20) word = 'Büyüyen ağaç';
-      else if (count === 21) word = 'Koca bir ağaç';
+      else if (count === 21) word = 'Çiçek açan sakura';
       $('captionBadge').textContent = word;
       $('stageLabel').textContent = count ? `${count}. büyüme halkası` : 'Bir tohumun hikâyesi';
-      $('captionText').textContent = count === 0 ? 'Her büyük ağaç bir tohumla başlar.' : count === 21 ? '21 güzel günün her biri bu ağaçta yaşıyor.' : 'Her okuma günü, ağacında yeni bir iz bırakır.';
+      $('captionText').textContent = count === 0 ? 'Her kiraz ağacı bir tohumla başlar.' : count === 21 ? '21 günün sonunda sakuran çiçek açtı. 🌸' : count >= 11 ? 'Sabırla büyüttüğün ağacın çiçekleniyor.' : 'Her okuma günü, yeni bir dal ve tomurcuk demek.';
       setCanvasLabel();
       renderDays(day);
       syncDock();
@@ -432,7 +520,8 @@
         const row = document.createElement('div');
         row.className = `day-row${done ? ' done' : ''}${active ? ' current' : ''}`;
         row.setAttribute('role', 'listitem');
-        const status = done ? 'Tamamlandı' : active ? 'Bugün' : (state && today > day) ? 'Tamamlanmadı' : 'Sırada';
+        const status = done ? 'Tamamlandı' : active ? 'Bugün' : '🔒 Kilitli';
+        if (!done && !active) row.classList.add('locked');
         row.innerHTML = `<div class="day-circle" aria-hidden="true">${done ? '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4.5 4.5L19 7"/></svg>' : day}</div><div><span class="day-name">${day}. Gün</span><span class="day-target">${schedule[day-1]} dakika okuma</span></div><span class="day-state">${status}</span>`;
         fragment.append(row);
       }
@@ -441,7 +530,7 @@
       list.scrollTop = oldScroll;
     }
     function previewLabels(count) {
-      const word = count===0 ? 'Tohum' : count<=2 ? 'Filiz' : count<=6 ? 'Fidan' : count<=12 ? 'Genç ağaç' : count<21 ? 'Büyüyen ağaç' : 'Koca bir ağaç';
+      const word = count===0 ? 'Tohum' : count<=2 ? 'Filiz' : count<=6 ? 'Fidan' : count<=12 ? 'Genç sakura' : count<21 ? 'Çiçeklenen sakura' : 'Çiçek açan sakura';
       $('treeCount').textContent = count;
       $('previewRange').value = count; $('scrubValue').textContent = `${count}. gün`;
       $('stageLabel').textContent = count===0 ? 'Önizleme • Başlangıç' : `Önizleme • ${count}. gün`;
@@ -460,7 +549,7 @@
       falling = [];
       $('previewLabel').textContent = '21 Günlük Büyümeyi İzle';
       $('previewIcon').textContent = '▶';
-      $('previewNote').textContent = 'Tohumdan canlı bir ağaca • Kayıtların değişmez';
+      $('previewNote').textContent = 'Tohumdan çiçek açan sakuraya • Kayıtların değişmez';
       $('scrubRow').hidden = true;
       $('previewBtn').setAttribute('aria-pressed', 'false');
       updateUI();
@@ -486,7 +575,7 @@
     function start() {
       if (state) return;
       if (preview) stopPreview();
-      state = { started: localDate(), completed: [] };
+      state = makeState();
       persist();
       updateUI({ scrollCurrent: true });
       $('completeBtn').focus({ preventScroll: true });
@@ -494,16 +583,25 @@
     function toggleToday() {
       if (!state) return;
       if (preview) stopPreview();
-      const d = currentDay();
-      if (d < 1 || d > MAX_DAYS) return;
-      const done = state.completed.includes(d);
-      if (done) state.completed = state.completed.filter(n => n !== d);
-      else state.completed.push(d);
-      state.completed.sort((a,b) => a-b);
-      persist();
-      animateStage(state.completed.length, !done);
-      if (!done) showToast(state.completed.length === 21 ? '21 gün! Bu ağacı sen büyüttün. ✨' : `${d}. gün tamam! Ağacın biraz daha canlandı. 🌿`);
-      updateUI({ animate: true });
+      const at=Date.now();
+      if(clockWentBack(at)){showToast('Cihaz saati geriye alınmış. Güvenilir zaman gelene kadar işaretleme kapalı.');return;}
+      if(ensureCycle(at)) return;
+      const d=currentDay(at);
+      if(d<1 || d>MAX_DAYS) return;
+      // Prevent marking future or past days, even if the DOM is manipulated.
+      if(d!==state.completed.length+1 && d!==state.completed.length){showToast('Sadece içinde bulunduğun 24 saatlik gün işaretlenebilir.');return;}
+      const done=state.completed.includes(d);
+      if(done){
+        state.completed.pop();state.completionTimes.pop();
+      } else {
+        if(state.completed.length!==d-1) {showToast('Önceki gün tamamlanmadan devam edilemez.');return;}
+        state.completed.push(d);state.completionTimes.push(at);
+        state.missedNotice=false;
+      }
+      state.lastSeenAt=Math.max(state.lastSeenAt,at);
+      persist();animateStage(state.completed.length,!done);
+      if(!done) showToast(d===21?'21 günlük sakuran çiçek açtı! 🌸':`${d}. gün tamamlandı! Bir çiçek daha açtı. 🌸`);
+      updateUI({animate:true});
     }
     function openReset() { if (preview) stopPreview(); lastFocus = document.activeElement; $('resetDialog').hidden = false; document.body.style.overflow = 'hidden'; syncDock(); $('cancelReset').focus(); }
     function closeReset() { $('resetDialog').hidden = true; document.body.style.overflow = ''; syncDock(); if (lastFocus && lastFocus.isConnected) lastFocus.focus(); }
@@ -521,7 +619,7 @@
     // The JSON file contains no secrets and is never sent to a server.
     function exportBackup() {
       if (!state) { showToast('Önce okumaya başla.'); return; }
-      const data = {format:'okuma-agaci-backup', version:1, exportedAt:new Date().toISOString(), data:{started:state.started, completed:[...state.completed]}};
+      const data = {format:'okuma-agaci-backup', version:2, exportedAt:new Date().toISOString(), data:{...state, completed:[...state.completed], completionTimes:[...state.completionTimes]}};
       const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json;charset=utf-8'});
       const u = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -531,17 +629,24 @@
       showToast('Yedek dosyası hazır. iPhone’da Dosyalar’a kaydedebilirsin.');
     }
     function validateBackup(raw) {
-      if(!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Dosya biçimi hatalı.');
+      if(!raw || typeof raw!=='object' || Array.isArray(raw)) throw new Error('Dosya biçimi hatalı.');
       let b;
-      if(raw.format === 'okuma-agaci-backup' && raw.version === 1) b=raw.data;
+      if(raw.format==='okuma-agaci-backup' && (raw.version===2 || raw.version===1)) b=raw.data;
       else if(!raw.format && raw.started && Array.isArray(raw.completed)) b=raw;
       else throw new Error('Bu dosya Okuma Ağacı yedeği değil.');
-      if(!b || !validDate(b.started) || !Array.isArray(b.completed)) throw new Error('Yedekte geçersiz tarih veya gün verisi var.');
-      if(daySerial(b.started) > daySerial(localDate())) throw new Error('Yedek başlangıç tarihi gelecekte olamaz.');
-      const elapsed=Math.floor(daySerial(localDate())-daySerial(b.started))+1;
-      if(b.completed.some(d=>!Number.isInteger(d)||d<1||d>MAX_DAYS||d>elapsed)) throw new Error('Yedekteki günler geçersiz.');
-      return {started:b.started,completed:[...new Set(b.completed)].sort((a,b)=>a-b)};
+      if(!b || !validDate(b.started) || !Array.isArray(b.completed)) throw new Error('Yedekte geçersiz gün verisi var.');
+      let migrated;
+      if(b.ruleVersion===RULE_VERSION){
+        migrated=normalizeStrict(b,Date.now());
+        if(!migrated) throw new Error('24 saatlik kurala uymayan kayıt bulundu.');
+        // Do not restore a backup that would already have a missing day.
+        if(migrated.completed.length<MAX_DAYS && currentSlot(migrated,Date.now())>migrated.completed.length+1)
+          throw new Error('Bu yedekteki okuma serisi artık süresi geçtiği için devam edemez.');
+        migrated.lastSeenAt=Date.now();
+      } else migrated=migrateLegacy(b,Date.now());
+      return migrated;
     }
+    function currentSlot(s,at) {return Math.max(1,Math.floor((at-s.startedAt)/DAY_MS)+1);}
     async function importBackup(file) {
       if(!file) return;
       if(file.size>65536) {showToast('Yedek dosyası çok büyük.');return;}
@@ -553,7 +658,7 @@
         state=imported;
         falling=[]; transition=null; shownStage=imported.completed.length;
         persist(); updateUI({scrollCurrent:true});
-        showToast('Okuma kayıtların geri yüklendi. 🌿');
+        showToast('Okuma kayıtların geri yüklendi. 🌸');
       }catch(e){showToast('Yedek yüklenemedi: '+(e instanceof SyntaxError?'Geçersiz JSON dosyası.':e.message));}
     }
     $('exportBtn').addEventListener('click',exportBackup);
@@ -613,8 +718,13 @@
       }
     });
     function checkDate() {
-      const now = localDate();
-      if (now !== lastLocalDate) { lastLocalDate = now; updateUI({ scrollCurrent: true }); }
+      if(!state) return;
+      const at=Date.now();
+      if(ensureCycle(at)) return;
+      const slot=currentDay(at);
+      if(slot!==lastWindow || localDate()!==lastLocalDate){
+        lastWindow=slot;lastLocalDate=localDate();updateUI({scrollCurrent:true});
+      } else updateCountdown(at);
     }
     window.addEventListener('pageshow', checkDate);
     document.addEventListener('visibilitychange', () => {
@@ -625,7 +735,7 @@
         checkDate(); syncDock(); draw(now);
       }
     });
-    setInterval(checkDate, 60000);
+    setInterval(checkDate, 1000);
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(entries => {
         todayVisible = entries[0].isIntersecting && entries[0].intersectionRatio > .5;
@@ -657,8 +767,38 @@
       if(vein){ctx.beginPath();ctx.moveTo(-sz*.45,0);ctx.quadraticCurveTo(0,-sz*.03,sz*.53,-sz*.03);ctx.strokeStyle='rgba(227,245,181,.36)';ctx.lineWidth=.43;ctx.stroke();}
       ctx.restore();
     }
+    function cherryPetal(x,y,size,rot,color,alpha=1) {
+      ctx.save();ctx.translate(x,y);ctx.rotate(rot);ctx.globalAlpha*=clamp(alpha);
+      ctx.beginPath();ctx.moveTo(0,0);
+      ctx.bezierCurveTo(-size*.64,-size*.27,-size*.51,-size*.95,0,-size*1.06);
+      ctx.bezierCurveTo(size*.11,-size*.84,size*.12,-size*.84,size*.22,-size*.94);
+      ctx.bezierCurveTo(size*.66,-size*.52,size*.44,-size*.15,0,0);
+      ctx.fillStyle=color;ctx.fill();ctx.restore();
+    }
+    function blossom(x,y,r,angle,shade,open,light) {
+      ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.globalAlpha*=ease(open);
+      // Five unequal notched petals: pale outer rim, peach midtone, sunlit center.
+      const shades=[['#f9dfe6','#f5c7d6','#fff2eb'],['#ffe7eb','#f8ccd9','#ffefe9'],['#f5b6c8','#e99bba','#ffe6e5'],['#fff2f0','#ffdce5','#fff8ef']];
+      const p=shades[shade%shades.length];
+      ellipse(.35,.65,r*.89,r*.70,'rgba(102,63,65,.15)');
+      for(let k=0;k<5;k++){
+        const a=k*(Math.PI*2/5)+Math.sin(k*1.82)*.085;
+        cherryPetal(Math.cos(a)*r*.33,Math.sin(a)*r*.33,r*.87*open,a+Math.PI/2,p[k%3],1);
+      }
+      ellipse(0,0,r*.20,r*.18,light?'#fff5b7':'#f6ce8a');
+      if(r>2.5){for(let k=0;k<3;k++){
+        const a=k*2.09+.28;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(a)*r*.33,Math.sin(a)*r*.33);
+        ctx.strokeStyle='rgba(172,106,79,.64)';ctx.lineWidth=.35;ctx.stroke();
+        ellipse(Math.cos(a)*r*.34,Math.sin(a)*r*.34,.38,.38,'#eec37a');
+      }}
+      ctx.restore();
+    }
     function backdrop(t,stage) {
-      ctx.fillStyle=grad(0,0,0,400,[[0,'#bedce0'],[.29,'#d9e9e2'],[.69,'#f2edce'],[1,'#e5d7ae']]);ctx.fillRect(0,0,420,400);
+      const bloom=clamp((stage-10)/11);
+      ctx.fillStyle=grad(0,0,0,400,[[0,bloom>.15?'#c8dae5':'#bedce0'],[.29,bloom>.15?'#e5e8e6':'#d9e9e2'],[.69,bloom>.15?'#f5e5df':'#f2edce'],[1,'#e5d7ae']]);ctx.fillRect(0,0,420,400);
+      if(bloom){const blush=ctx.createRadialGradient(94,142,17,110,164,213);
+        blush.addColorStop(0,`rgba(252,219,225,${.35*bloom})`);blush.addColorStop(1,'rgba(250,223,231,0)');
+        ctx.fillStyle=blush;ctx.fillRect(0,0,338,350);}
       // Late afternoon sun, with translucent atmospheric scattering.
       const sun=ctx.createRadialGradient(324,93,3,324,93,171);
       sun.addColorStop(0,'rgba(255,254,234,.98)');sun.addColorStop(.13,'rgba(255,248,205,.64)');sun.addColorStop(.43,'rgba(255,240,189,.28)');sun.addColorStop(1,'rgba(255,239,189,0)');
@@ -758,6 +898,23 @@
       makeBranch(p,(k-2.5)*.13,47+(k%3)*9,2.6,2,9+k*1.7,17671+k*331);
     }
     foliage.sort((a,b)=>a.y-b.y); wood.sort((a,b)=>b.width-a.width);
+    // Bloom points follow real twig/leaf locations; deterministic through all 21 stages.
+    const blooms=[];
+    const bloomRand=random(507190);
+    for(let i=0;i<foliage.length;i+=3){
+      const l=foliage[i];const q=bloomRand();
+      if(q>.82) continue;
+      const born=Math.max(l.birth+.15,10.7+bloomRand()*8.15);
+      const blossomsPerShoot=bloomRand()>.66?2:1;
+      for(let z=0;z<blossomsPerShoot;z++) blooms.push({
+        x:l.x+(bloomRand()-.5)*11,
+        y:l.y+(bloomRand()-.5)*8,
+        r:2.2+bloomRand()*2.6,
+        rot:bloomRand()*Math.PI*2,shade:Math.floor(bloomRand()*4),born:born+z*.45,
+        light:bloomRand()>.45
+      });
+    }
+    blooms.sort((a,b)=>a.y-b.y);
     // Screenshots are crisp on Retina displays; dynamic drawings are cached.
     let cachedA=null,cachedB=null;
     const stageImageCache=new Map();
@@ -813,6 +970,17 @@
         leaf(l.x,l.y,sz,l.theta,color,Math.min(1,grow*1.5));
         if(l.seed>893 && grow>.7) leaf(l.x-1.1,l.y-1,sz*.51,l.theta+.09,'rgba(208,226,144,.49)',grow);
       }
+      // First pink buds appear around day 11; hundreds of individually lit blossoms
+      // gradually open while leaves remain behind to preserve depth and realism.
+      if(stage>10.15){
+        for(const b of blooms){
+          const opening=ease(clamp((stage-b.born+.42)/1.37));
+          if(opening<=.002)continue;
+          if(opening<.27){
+            ellipse(b.x,b.y,1.3*opening+1.1,1.0*opening+.9,'#e9a6b8',b.rot);
+          } else blossom(b.x,b.y,b.r,b.rot,b.shade,opening,b.light);
+        }
+      }
       ctx.restore();
     }
     function seedAndSapling(stage,time){
@@ -829,8 +997,7 @@
       ctx.lineCap='round';ctx.strokeStyle='#496f39';ctx.lineWidth=1.3+stage*.62;ctx.stroke();
       ctx.lineWidth=.9;ctx.strokeStyle='#b5c97e';ctx.stroke();
       const pairs=Math.floor(stage*1.33+1);
-      for(let i=0;i<pairs;i++){
-        const birth=.6+i*.71;const visibility=ease(clamp(stage-birth+.25));if(!visibility)continue;
+      for(let i=0;i<pairs;i++){        const birth=.6+i*.71;const visibility=ease(clamp(stage-birth+.25));if(!visibility)continue;
         const lvl=(i+1)/(pairs+1),x=210+wind*lvl,y=lerp(334,tip+9,lvl);
         const side=i%2?1:-1,len=(10+stage*1.8+i%3*2)*visibility;
         ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(x+side*4,y-5,x+side*9,y-8);
@@ -868,7 +1035,8 @@
       falling=[];
       for(let i=0;i<26;i++){
         const x=around.x+(r()-.5)*190,y=around.y+(r()-.5)*135;
-        falling.push({x,y,vx:(r()-.5)*44,vy:18+r()*58,size:2.8+r()*5.6,angle:r()*6.28,spin:(r()-.5)*2.1,life:2.1+r()*2.3,delay:r()*.75,start:now,color:['#e8b862','#c7d37d','#79a75c','#f9e3a5'][Math.floor(r()*4)]});
+        const cherry=stage>=10.5;
+        falling.push({x,y,vx:(r()-.5)*44,vy:18+r()*58,size:cherry?2.5+r()*3.1:2.8+r()*5.6,angle:r()*6.28,spin:(r()-.5)*2.1,life:2.1+r()*2.3,delay:r()*.75,start:now,cherry,color:cherry?['#ffe9f0','#f8cadc','#ec9db7','#fff0f3'][Math.floor(r()*4)]:['#e8b862','#c7d37d','#79a75c','#f9e3a5'][Math.floor(r()*4)]});
       }
     }
     function spawnFalling(stage){particles(stage);}
@@ -889,9 +1057,23 @@
         const x=p.x+p.vx*elapsed+Math.sin(elapsed*4+p.angle)*14;
         const y=p.y+p.vy*elapsed+16*elapsed*elapsed;
         if(y>339)continue;
-        leaf(x,y,p.size,p.angle+p.spin*elapsed,p.color,clamp((p.life-elapsed)/.8));
+        if(p.cherry)cherryPetal(x,y,p.size,p.angle+p.spin*elapsed,p.color,clamp((p.life-elapsed)/.8));
+        else leaf(x,y,p.size,p.angle+p.spin*elapsed,p.color,clamp((p.life-elapsed)/.8));
       }
       if(!alive)falling=[];
+      // A few naturally falling petals, even between completed days.
+      if(stage>12){
+        const bloom=clamp((stage-12)/9);
+        for(let i=0;i<11;i++){
+          const rr=random(49091+i*1607);
+          const x0=90+rr()*260,y0=75+rr()*130,phase=rr()*60000;
+          const flow=(t+phase)*(.010+rr()*.012);
+          const x=x0+Math.sin(t*.00064+i*2.5)*13+flow*.11;
+          const y=y0+(flow%300);
+          if(y>341||x>406)continue;
+          cherryPetal(x,y,1.5+rr()*2.2,flow*.038,'#f7c6d8',bloom*.5);
+        }
+      }
     }
     let animationBoost=0;
     function draw(now){

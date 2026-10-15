@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Okuma Ağacı — 21 Günlük Okuma Alışkanlığı",
+  "name": "Okuma Ağacı — 21 Günlük Sakura",
   "short_name": "Okuma Ağacı",
-  "description": "Her gün okuyarak 21 günde ağacını büyüt. İnternetsiz kullan, ilerlemeni yedekle.",
+  "description": "21 günlük okuma serini tamamlayarak çiçek açan sakura ağacını büyüt.",
   "lang": "tr",
   "dir": "ltr",
   "start_url": "./",

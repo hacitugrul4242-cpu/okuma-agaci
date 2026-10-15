@@ -1,42 +1,38 @@
-# Okuma Ağacı — 21 Günlük Okuma Alışkanlığı 🌳
+# Okuma Ağacı — Sakura 🌸
 
-İnternetsiz kullanılabilen, iPhone ana ekranına kurulabilen, Türkçe 21 günlük okuma alışkanlığı uygulaması. Harici kütüphane ve sunucu gerektirmez. Animasyon, HTML Canvas üzerinde çalışır.
+21 günde kitap okuma alışkanlığı edinmek için tasarlanmış, iPhone ana ekranına kurulabilen çevrimdışı PWA. Her gün ağaç gelişir; 11. günden itibaren kiraz çiçekleri açar.
 
-## GitHub Pages ile yayımlama
+## Canlı uygulama
 
-Bu depo PWA dosyalarını içerir; dosyalar `main` dalının köküne yüklenmiştir.
+https://hacitugrul4242-cpu.github.io/okuma-agaci/
 
-1. Depo sahibi **[Settings → Pages](https://github.com/hacitugrul4242-cpu/okuma-agaci/settings/pages)** bölümüne gitsin.
-2. **Build and deployment → Source: Deploy from a branch** seçsin.
-3. **Branch: main**, **Folder: /(root)** ayarlasın ve **Save** düğmesine bassın.
-4. GitHub Pages etkinleşince adres: **https://hacitugrul4242-cpu.github.io/okuma-agaci/**
-5. iPhone'da bu HTTPS adresini Safari'de açıp **Paylaş → Ana Ekrana Ekle** seç.
-6. İlk açılışta internet bağlantısı gerekir; önbellek hazır olduktan sonra uçak modunda yeniden açarak çevrimdışı çalışmayı test et.
+iPhone Safari → Paylaş → Ana Ekrana Ekle. Güncellemeden sonra uygulamayı tamamen kapatıp tekrar aç.
 
-> GitHub Pages etkinleştirilmedikçe yukarıdaki uygulama adresi çalışmayabilir; kod yüklenmesi ve sitenin yayımlanması ayrı işlemlerdir.
+## 24 saatlik seri kuralları
 
-## Özellikler
+- Başlangıç anı, birinci 24 saatlik günün başlangıcıdır.
+- Her 24 saatlik dilimde **yalnızca o gün** işaretlenebilir. Gelecek günler kilitlidir.
+- Süresi biten herhangi bir gün eksikse seri **otomatik sıfırlanır**; yeni bir tohumla 1. gün başlar.
+- 21/21 tamamlanırsa ağaç korunur, otomatik sıfırlanmaz.
+- Örnek: Pazartesi 17.30'da başladıysan ikinci gün salı 17.30'da açılır; takvim gece yarısına bağlı değildir.
+- Eski sürümdeki kayıtlar, geçmişte saat bilgisi bulunmadığından geriye dönük cezalandırılmaz; mevcut toplam korunur ve yeni kurallar güncellemeden itibaren uygulanır.
 
-- Her iki günde bir artan hedef, 21. güne kadar toplam 21 hedef.
-- Tarihe bağlı günlük tamamlamalar; ilerleme `localStorage` içinde saklanır (`okuma-agaci-v1`).
-- 21 günlük büyümeyi hızlandırılmış izleme, bitişte ağaç, dinamik yapraklar.
-- JSON yedeği indirme ve yedeği geri yükleme.
-- Bildirim, hesap açma, verileri sunucuya gönderme veya üçüncü parti bağımlılığı yok.
+Bu zaman kontrolü çevrimdışı cihaz üzerinde çalışır; telefon saati veya yerel depolama kasıtlı değiştirilirse sunucu düzeyinde garanti verilemez.
 
-## Önemli uyarılar
+## Gizlilik ve veri
 
-- GitHub Pages herkese açık sayfa yayımlar. Uygulama kodu genel kullanım için uygundur ama **kişisel JSON yedeğini asla GitHub deposuna yükleme**.
-- Safari ile ana ekran uygulaması farklı depolama alanları kullanabilir; kayıtların otomatik taşınacağını varsayma. Yedekleme/geri yükleme kullan.
-- Tarayıcı verileri veya uygulama silinirse yerel kayıtlar kaybolabilir. Yedek sakla.
-- Service worker HTTPS ya da localhost üzerinde çalışır. HTML'yi doğrudan Dosyalar'dan açmak gerçek PWA deneyimi değildir.
-- Güncelleme sonrası SW'yi yenilemek için uygulamayı kapatıp yeniden açmak gerekebilir.
+- Okuma verileri sadece cihazda yerel olarak saklanır; GitHub'a gönderilmez.
+- Yedekleme/geri yükleme v2 (tamamlanma saatleriyle) desteklenir. v1 yedekleri de aktarılır.
+- JSON yedeklerini herkese açık GitHub'a yükleme.
+- Safari ile Ana Ekran uygulaması farklı depolama alanları kullanabilir.
+- Çevrimdışı kullanım ilk çevrimiçi açılıştan sonra önbelleğe alınır.
 
 ## Proje dosyaları
 
-- `index.html` — arayüz, kayıt takibi ve Canvas animasyonu
-- `manifest.webmanifest` — ana ekran/standalone ayarları
-- `service-worker.js` — çevrimdışı önbellek
-- `icons/` — iOS ve standart PWA simgeleri
-- `.nojekyll` — Pages'e statik dosyaları olduğu gibi sunmasını söyler
+- `index.html`: arayüz, Canvas sakura, 21 günlük sistem ve zamanlama.
+- `manifest.webmanifest`: PWA kurulumu.
+- `service-worker.js`: sürümlü çevrimdışı önbellek.
+- `icons/`: uygulama simgeleri.
+- `.nojekyll`: GitHub Pages.
 
-Projeyi yerel ortamda denemek için bu dizinde `python3 -m http.server 8000` çalıştırıp `http://localhost:8000` adresini aç.
+GitHub Pages ayarları: Settings → Pages → Deploy from a branch → main → /(root).

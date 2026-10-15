@@ -1,5 +1,5 @@
 /* Okuma Ağacı — GitHub Pages project-scoped offline cache. */
-const CACHE_NAME = 'okuma-agaci-pwa-v1-20261015';
+const CACHE_NAME = 'okuma-agaci-pwa-v2-sakura-20261015';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
